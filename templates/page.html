@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = ${singlePage.spec.title},
+    description = ${singlePage.status.excerpt},
+    active = 'page',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <div class="container">
+      <div class="post-layout post-layout--single">
+        <article>
+          <header>
+            <p class="post-kicker">
+              <span>PAGE</span>
+              <span class="sep">/</span>
+              <span th:text="${#dates.format(singlePage.spec.publishTime, 'yyyy-MM-dd')}"></span>
+            </p>
+            <h1 class="post-title" th:text="${singlePage.spec.title}"></h1>
+            <div class="post-meta">
+              <span>修订 · [[${#dates.format(singlePage.status.lastModifyTime, 'yyyy-MM-dd')}]]</span>
+            </div>
+          </header>
+
+          <div class="post-content" th:utext="${singlePage.content.content}"></div>
+
+          <!-- 评论 -->
+          <div class="post-comment" th:if="${theme.config.global.comment_enabled && singlePage.spec.allowComment}">
+            <div class="related-title">COMMENTS · 评论</div>
+            <div id="comment">
+              <halo:comment
+                group="content.halo.run"
+                kind="SinglePage"
+                th:attr="name=${singlePage.metadata.name}"
+              />
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </th:block>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = '友情链接',
+    description = ${site.subtitle},
+    active = 'links',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <div class="container">
+      <div class="page-hero">
+        <p class="page-kicker">LINKS</p>
+        <h1 class="page-title">友情链接</h1>
+        <p class="page-desc">PAPER &amp; INK · 与纸墨同行</p>
+      </div>
+
+      <th:block th:if="${groups != null}">
+        <th:block th:each="group : ${groups}">
+          <h2 class="link-group-title" th:unless="${#strings.isEmpty(group.spec.displayName)}" th:text="${group.spec.displayName}"></h2>
+          <div class="link-grid">
+            <a class="link-card" th:each="link : ${group.links}" th:href="${link.spec.url}" target="_blank" rel="noopener">
+              <img class="link-logo" th:src="${link.spec.logo}" th:alt="${link.spec.displayName}" loading="lazy" />
+              <span>
+                <span class="link-name" th:text="${link.spec.displayName}"></span>
+                <span class="link-desc" th:if="${!#strings.isEmpty(link.spec.description)}" th:text="${link.spec.description}"></span>
+              </span>
+            </a>
+          </div>
+        </th:block>
+      </th:block>
+    </div>
+  </th:block>
+</html>

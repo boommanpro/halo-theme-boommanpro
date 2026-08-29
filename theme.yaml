@@ -1,0 +1,22 @@
+# nonk8s
+apiVersion: theme.halo.run/v1alpha1
+kind: Theme
+metadata:
+  name: halo-theme-boommanpro
+spec:
+  displayName: Boommanpro
+  author:
+    name: boommanpro
+    website: https://boommanpro.cn
+  description: 纸与墨（Paper & Ink）风格的个人技术期刊主题，基于 boommanpro.cn 站点设计概念稿。
+  website: https://github.com/boommanpro
+  repo: https://github.com/boommanpro/halo-theme-boommanpro.git
+  settingName: "halo-theme-boommanpro-setting"
+  configMapName: "halo-theme-boommanpro-configMap"
+  version: 1.0.0
+  require: ">=2.0.0"
+  customTemplates:
+    page:
+      - name: skill
+        description: Skill 技能中心
+        file: templates/skill.html

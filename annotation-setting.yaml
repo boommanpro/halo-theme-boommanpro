@@ -1,0 +1,14 @@
+# nonk8s
+apiVersion: v1alpha1
+kind: AnnotationSetting
+metadata:
+  generateName: annotation-setting-boommanpro
+spec:
+  targetRef:
+    group: ""
+    kind: MenuItem
+  formSchema:
+    - $formkit: "text"
+      name: "icon"
+      label: "图标文字"
+      help: "导航菜单项前的等宽编号，如 01、02"

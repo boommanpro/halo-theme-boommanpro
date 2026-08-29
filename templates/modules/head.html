@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" lang="zh-CN">
+  <head th:fragment="head(title, description)">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <th:block th:with="desc=${description != null ? description : site.subtitle}">
+      <meta name="description" th:if="${!#strings.isEmpty(desc)}" th:content="${desc}" />
+      <meta property="og:title" th:content="${title}" />
+      <meta property="og:description" th:if="${!#strings.isEmpty(desc)}" th:content="${desc}" />
+      <meta property="og:type" content="website" />
+    </th:block>
+    <link rel="canonical" th:href="${site.url}" />
+    <link th:if="${!#strings.isEmpty(site.logo)}" rel="icon" th:href="${site.logo}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&amp;family=Noto+Sans+SC:wght@300;400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- 主题初始化（防闪烁） -->
+    <script th:inline="javascript">
+      (function () {
+        try {
+          var t = localStorage.getItem('bp-theme');
+          if (!t) {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <link
+      rel="stylesheet"
+      th:href="@{/assets/dist/main.css?v={version}(version=${theme.spec.version})}"
+    />
+    <script
+      th:src="@{/assets/dist/main.js?v={version}(version=${theme.spec.version})}"
+      type="module"
+    ></script>
+  </head>
+</html>

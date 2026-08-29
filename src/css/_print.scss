@@ -1,0 +1,18 @@
+// 打印样式
+@media print {
+  .site-nav,
+  .progress-bar,
+  .utility-bar,
+  .manifesto,
+  .back-to-top,
+  .post-toc,
+  .post-comment,
+  .post-nav,
+  .related-posts {
+    display: none;
+  }
+
+  body::after {
+    display: none;
+  }
+}

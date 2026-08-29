@@ -1,0 +1,44 @@
+// ============================================================
+// boommanpro · 纸与墨（Paper & Ink）
+// 设计变量：衬线大标题 × 等宽数据细节 × 编辑部式分割线
+// ============================================================
+
+:root {
+  --font-serif: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code", "Courier New", monospace;
+
+  --bg: #F6F3EC;
+  --card: #FCFAF4;
+  --row-hover: #EFEBE0;
+  --ink: #1C1917;
+  --ink-2: #57534C;
+  --ink-3: #8B857A;
+  --line: rgba(28, 25, 23, 0.14);
+  --line-strong: rgba(28, 25, 23, 0.82);
+  --accent: #C14A18;
+  --accent-ink: #A63F12;
+  --accent-soft: rgba(193, 74, 24, 0.08);
+  --term-bg: #17130F;
+  --term-ink: #E9E3D6;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #131110;
+  --card: #1B1815;
+  --row-hover: #201C18;
+  --ink: #EAE4D8;
+  --ink-2: #A9A298;
+  --ink-3: #6F695F;
+  --line: rgba(234, 228, 216, 0.14);
+  --line-strong: rgba(234, 228, 216, 0.78);
+  --accent: #E08A4F;
+  --accent-ink: #E59A66;
+  --accent-soft: rgba(224, 138, 79, 0.1);
+  --term-bg: #17130F;
+  --term-ink: #E9E3D6;
+
+  color-scheme: dark;
+}

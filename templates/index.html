@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = ${site.title},
+    description = ${site.subtitle},
+    active = 'home',
+    variant = 'home',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <th:block
+      th:with="allPosts = ${postFinder.list(1, 0)},
+               allCategories = ${categoryFinder.listAll()},
+               featuredPost = ${allPosts.items != null && !#lists.isEmpty(allPosts.items) ? allPosts.items[0] : null}"
+    >
+      <!-- ==================== Hero ==================== -->
+      <section class="hero" aria-label="开篇">
+        <div class="vertical-note" aria-hidden="true" th:text="${theme.config.hero.vertical_note}"></div>
+        <div class="container">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <p class="kicker" data-reveal th:text="${theme.config.hero.kicker}"></p>
+              <h1 class="hero-title" data-reveal style="--d:.08s" th:utext="${theme.config.hero.title}"></h1>
+              <p class="hero-sub" data-reveal style="--d:.16s" th:text="${theme.config.hero.subtitle}"></p>
+              <div class="hero-cta" data-reveal style="--d:.24s">
+                <a class="btn btn-solid" th:href="${theme.config.hero.cta_primary_url}" th:text="${theme.config.hero.cta_primary_text}"></a>
+                <a
+                  class="btn btn-ghost"
+                  th:href="${theme.config.hero.cta_secondary_url}"
+                  th:text="${theme.config.hero.cta_secondary_text}"
+                  th:target="${#strings.startsWith(theme.config.hero.cta_secondary_url, 'http') ? '_blank' : ''}"
+                  rel="noopener"
+                ></a>
+              </div>
+            </div>
+
+            <div class="hero-terminal" data-reveal style="--d:.2s">
+              <div class="terminal" role="img" aria-label="终端演示">
+                <div class="terminal-bar">
+                  <span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>
+                  <span class="terminal-title">boommanpro@cn — zsh</span>
+                </div>
+                <div class="terminal-body">
+                  <th:block th:each="line, iterStat : ${theme.config.hero.terminal}">
+                    <th:block th:if="${line.type == 'command'}">
+                      <div class="t-line" th:style="|animation-delay: ${0.25 + iterStat.count * 0.18}s|">
+                        <span class="t-prompt">$</span><span th:text="${line.text}"></span>
+                      </div>
+                    </th:block>
+                    <th:block th:if="${line.type != 'command'}">
+                      <div class="t-out" th:style="|animation-delay: ${0.4 + iterStat.count * 0.18}s|" th:text="${line.text}"></div>
+                    </th:block>
+                  </th:block>
+                  <div class="t-line" style="animation-delay: 2s">
+                    <span class="t-prompt">$</span><span class="cursor" aria-hidden="true"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-stats" data-reveal style="--d:.15s">
+            <div class="stat" th:each="s : ${theme.config.hero.stats}">
+              <div class="stat-no">
+                <span th:attr="data-count=${s.value}" data-pad="2">00</span><span class="unit" th:text="${s.unit}"></span>
+              </div>
+              <div class="stat-label" th:text="${s.label}"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 01 封面故事 ==================== -->
+      <section class="section" id="featured" aria-label="封面故事" data-navlabel="01 / 封面故事">
+        <div class="container">
+          <div class="sec-head" data-reveal>
+            <span class="sec-no">01</span>
+            <h2 class="sec-title">封面故事</h2>
+            <span class="sec-en">COVER STORY</span>
+          </div>
+
+          <div class="featured-grid" th:if="${featuredPost != null}">
+            <div data-reveal>
+              <p class="featured-meta">
+                <span th:text="${#dates.format(featuredPost.spec.publishTime, 'yyyy-MM-dd')}"></span>
+                <span>
+                  <th:block th:each="cat, iter : ${featuredPost.categories}">
+                    <th:block th:if="${iter.index > 0}"> · </th:block>[[${cat.spec.displayName}]]
+                  </th:block>
+                </span>
+              </p>
+              <h3 class="featured-title">
+                <a th:href="${featuredPost.status.permalink}" th:text="${featuredPost.spec.title}"></a>
+              </h3>
+              <p class="featured-excerpt" th:text="${featuredPost?.status?.excerpt}"></p>
+              <a class="featured-more" th:href="${featuredPost.status.permalink}"
+                >阅读全文 <span class="arr">→</span></a
+              >
+            </div>
+
+            <div data-reveal style="--d:.12s" th:if="${theme.config.featured.mock_enabled}">
+              <div class="browser-mock">
+                <div class="mock-inner">
+                  <div class="mock-bar">
+                    <span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>
+                    <span class="mock-url" th:text="${theme.config.featured.mock_url}"></span>
+                  </div>
+                  <div class="skills-grid">
+                    <div class="skill-chip" th:classappend="${sk.hot == true ? 'is-hot' : ''}" th:each="sk : ${theme.config.featured.mock_skills}">
+                      <span class="sk-badge" th:if="${sk.hot == true && !#strings.isEmpty(sk.badge)}" th:text="${sk.badge}"></span>
+                      <span class="sk-name" th:text="${sk.name}"></span>
+                      <span class="sk-desc" th:text="${sk.desc}"></span>
+                    </div>
+                  </div>
+                </div>
+                <p class="mock-caption" th:text="${theme.config.featured.mock_caption}"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 02 文章索引 ==================== -->
+      <section class="section" id="articles" aria-label="文章索引" data-navlabel="02 / 文章索引">
+        <div class="container">
+          <div class="sec-head" data-reveal>
+            <span class="sec-no">02</span>
+            <h2 class="sec-title">文章索引</h2>
+            <span class="sec-en">INDEX</span>
+          </div>
+
+          <div class="filter-bar" role="group" aria-label="按分类筛选文章" data-reveal>
+            <button class="chip is-active" data-filter="all">
+              全部<span class="cnt" th:text="${#lists.size(allPosts.items)}"></span>
+            </button>
+            <th:block th:each="cat : ${allCategories}">
+              <button class="chip" th:attr="data-filter=${cat.metadata.name}">
+                <span th:text="${cat.spec.displayName}"></span><span class="cnt" th:text="${cat.status.visiblePostCount == null ? 0 : cat.status.visiblePostCount}"></span>
+              </button>
+            </th:block>
+          </div>
+          <p class="filter-count" id="filterCount" data-reveal>
+            显示 <span th:text="${#lists.size(allPosts.items)}"></span> / <span th:text="${#lists.size(allPosts.items)}"></span> 篇 · 按时间倒序
+          </p>
+
+          <div class="article-list" id="articleList">
+            <a
+              class="article-row"
+              th:each="post, iter : ${allPosts.items}"
+              th:attr="data-cat=${#strings.listJoin(post.categories.![metadata.name], ' ')}"
+              th:href="${post.status.permalink}"
+              data-reveal
+            >
+              <span class="row-no" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
+              <span class="row-main">
+                <span class="row-title" th:text="${post.spec.title}"></span>
+                <span class="row-cats">
+                  <th:block th:each="cat, catIter : ${post.categories}">
+                    <th:block th:if="${catIter.index > 0}"> · </th:block>[[${cat.spec.displayName}]]
+                  </th:block>
+                </span>
+              </span>
+              <span class="row-date" th:text="${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"></span>
+              <span class="row-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+
+          <a class="archive-more" th:href="@{/archives}">查看完整归档 → </a>
+        </div>
+      </section>
+
+      <!-- ==================== 宣言 ==================== -->
+      <section class="manifesto" aria-label="编者观点">
+        <div class="container">
+          <p class="manifesto-quote" data-reveal th:utext="${theme.config.manifesto.quote}"></p>
+          <p class="manifesto-src" data-reveal style="--d:.15s">
+            <span th:text="${theme.config.manifesto.source_text}"></span> ·
+            <a th:href="${theme.config.manifesto.source_url}">阅读原文 →</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- ==================== 03 精选项目 ==================== -->
+      <section class="section" id="projects" aria-label="精选项目" data-navlabel="03 / 精选项目">
+        <div class="container">
+          <div class="sec-head" data-reveal>
+            <span class="sec-no">03</span>
+            <h2 class="sec-title">精选项目</h2>
+            <span class="sec-en">SELECTED WORK</span>
+          </div>
+
+          <div class="projects-grid">
+            <a
+              class="project-card"
+              th:each="p, iter : ${theme.config.projects.items}"
+              th:href="${p.url}"
+              th:target="${#strings.startsWith(p.url, 'http') ? '_blank' : ''}"
+              rel="noopener"
+              data-reveal
+              th:styleappend="${iter.index % 3 == 1 ? '--d:.08s' : (iter.index % 3 == 2 ? '--d:.16s' : '')}"
+            >
+              <div class="pc-top">
+                <span th:text="'P·' + ${#numbers.formatInteger(iter.count, 2)}"></span>
+                <span th:text="${p.year}"></span>
+              </div>
+              <h3 class="pc-name" th:text="${p.name}"></h3>
+              <p class="pc-desc" th:text="${p.desc}"></p>
+              <div class="pc-tags" th:if="${p.tags != null && !p.tags.isEmpty()}">
+                <span class="pc-tag" th:each="tag : ${p.tags.split(',')}" th:if="${!tag.trim().isEmpty()}" th:text="${tag.trim()}"></span>
+              </div>
+              <span class="pc-link"><span th:text="${p.link_text}">访问仓库</span> <span class="arr">→</span></span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 04 关于 ==================== -->
+      <section class="section" id="about" aria-label="关于" data-navlabel="04 / 关于">
+        <div class="container">
+          <div class="sec-head" data-reveal>
+            <span class="sec-no">04</span>
+            <h2 class="sec-title">关于</h2>
+            <span class="sec-en">ABOUT</span>
+          </div>
+
+          <div class="about-grid">
+            <div data-reveal>
+              <h3 class="about-name" th:text="${theme.config.about.name}"></h3>
+              <p class="about-motto" th:text="${theme.config.about.motto}"></p>
+              <p class="about-bio" th:text="${theme.config.about.bio}"></p>
+            </div>
+
+            <dl class="about-list" data-reveal style="--d:.12s">
+              <div class="dl-row" th:each="row : ${theme.config.about.rows}">
+                <dt th:text="${row.key}"></dt>
+                <dd th:utext="${row.value}"></dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+    </th:block>
+  </th:block>
+</html>

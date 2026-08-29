@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = '分类',
+    description = ${site.subtitle},
+    active = 'categories',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <div class="container">
+      <div class="page-hero">
+        <p class="page-kicker">CATEGORIES</p>
+        <h1 class="page-title">分类</h1>
+        <p class="page-desc" th:text="'共 ' + ${#lists.size(categories)} + ' 个分类'"></p>
+      </div>
+
+      <div class="term-grid">
+        <a class="term-row" th:each="category : ${categories}" th:href="${category.status.permalink}">
+          <span>
+            <span class="term-name" th:text="${category.spec.displayName}"></span>
+            <span class="term-desc" th:if="${!#strings.isEmpty(category.spec.description)}" th:text="${category.spec.description}"></span>
+          </span>
+          <span class="term-count" th:text="${category.status.visiblePostCount == null ? 0 : category.status.visiblePostCount} + ' 篇'"></span>
+        </a>
+      </div>
+    </div>
+  </th:block>
+</html>

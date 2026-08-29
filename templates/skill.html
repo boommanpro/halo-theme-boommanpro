@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = 'Skill · 技能库',
+    description = 'Skill 技能库',
+    active = 'skill',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js"></script>
+
+    <style>
+      /* ---------- 纸墨风 Skill 中心（全部使用主题 CSS 变量，自动适配深浅色） ---------- */
+      .sk-page {
+        padding-top: clamp(36px, 5vw, 60px);
+      }
+
+      .sk-kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.3em;
+        color: var(--accent-ink);
+        margin-bottom: 14px;
+      }
+
+      .sk-title {
+        font-family: var(--font-serif);
+        font-weight: 900;
+        font-size: clamp(30px, 4.2vw, 48px);
+        line-height: 1.2;
+        margin-bottom: 10px;
+      }
+
+      .sk-sub {
+        font-size: 15px;
+        font-weight: 300;
+        color: var(--ink-2);
+        margin-bottom: 30px;
+      }
+
+      /* 工具条：分类筛选 + 搜索 */
+      .sk-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--line-strong);
+        border-bottom: 1px solid var(--line);
+        padding: 12px 0;
+        margin-bottom: 34px;
+      }
+
+      .sk-cats {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+
+      .sk-cat {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: var(--ink-3);
+        text-decoration: none;
+        padding: 5px 10px;
+        border: 1px solid transparent;
+        transition: color 0.2s, border-color 0.2s;
+
+        &:hover {
+          color: var(--ink);
+        }
+
+        &.is-active {
+          color: var(--accent-ink);
+          border-color: var(--line-strong);
+          background: var(--card);
+        }
+      }
+
+      .sk-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        background: var(--card);
+        padding: 6px 12px;
+        min-width: 220px;
+
+        &:focus-within {
+          border-color: var(--ink-2);
+        }
+
+        span {
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--ink-3);
+        }
+
+        input {
+          border: 0;
+          outline: 0;
+          background: transparent;
+          color: var(--ink);
+          font-family: var(--font-mono);
+          font-size: 12.5px;
+          width: 100%;
+
+          &::placeholder {
+            color: var(--ink-3);
+          }
+        }
+      }
+
+      /* 卡片网格 */
+      .sk-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+      }
+
+      .sk-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid var(--line);
+        background: var(--card);
+        padding: 18px 20px 14px;
+        cursor: pointer;
+        transition: border-color 0.22s ease, transform 0.22s ease;
+
+        &:hover {
+          border-color: var(--line-strong);
+          transform: translateY(-3px);
+
+          .sk-card-go {
+            color: var(--accent-ink);
+          }
+        }
+      }
+
+      .sk-card-title {
+        font-family: var(--font-serif);
+        font-weight: 700;
+        font-size: 17px;
+        line-height: 1.45;
+        color: var(--ink);
+      }
+
+      .sk-badges {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .sk-badge {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.08em;
+        padding: 2px 7px;
+        border: 1px solid var(--line);
+        color: var(--ink-2);
+
+        &.is-cat {
+          color: var(--accent-ink);
+          border-color: var(--line-strong);
+          background: var(--accent-soft);
+        }
+      }
+
+      .sk-card-summary {
+        font-size: 13.5px;
+        line-height: 1.7;
+        color: var(--ink-2);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex: 1;
+      }
+
+      .sk-card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+        margin-top: 2px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: var(--ink-3);
+      }
+
+      .sk-card-go {
+        color: var(--ink-3);
+        transition: color 0.2s;
+      }
+
+      /* 详情页 */
+      .sk-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        color: var(--ink-3);
+        text-decoration: none;
+        margin-bottom: 22px;
+        cursor: pointer;
+        background: none;
+        border: 0;
+        padding: 0;
+
+        &:hover {
+          color: var(--accent-ink);
+        }
+      }
+
+      .sk-detail-head {
+        border: 1px solid var(--line);
+        border-top: 3px solid var(--ink);
+        background: var(--card);
+        padding: 24px 26px;
+        margin-bottom: 34px;
+      }
+
+      .sk-detail-title-row {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .sk-detail-title {
+        font-family: var(--font-serif);
+        font-weight: 900;
+        font-size: clamp(24px, 3.4vw, 36px);
+        line-height: 1.25;
+        margin: 0;
+      }
+
+      .sk-version {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--ink-2);
+        border: 1px solid var(--line-strong);
+        padding: 2px 8px;
+      }
+
+      .sk-detail-summary {
+        font-size: 15px;
+        font-weight: 300;
+        color: var(--ink-2);
+        line-height: 1.8;
+        margin-bottom: 18px;
+      }
+
+      .sk-stats {
+        display: flex;
+        gap: 22px;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--ink-3);
+
+        strong {
+          color: var(--ink);
+          font-weight: 600;
+        }
+      }
+
+      .sk-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      .sk-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        padding: 9px 16px;
+        border: 1px solid var(--ink);
+        background: transparent;
+        color: var(--ink);
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s, color 0.2s;
+
+        &:hover {
+          background: var(--ink);
+          color: var(--bg);
+        }
+
+        &.is-primary {
+          background: var(--ink);
+          color: var(--bg);
+
+          &:hover {
+            background: var(--accent-ink);
+            border-color: var(--accent-ink);
+          }
+        }
+      }
+
+      /* Markdown 正文复用主题排版 */
+      .sk-md {
+        max-width: 760px;
+      }
+
+      /* ZIP 技能：VSCode 式文件浏览（左树右内容） */
+      .sk-hub {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        border: 1px solid var(--line);
+        background: var(--card);
+        min-height: 480px;
+      }
+
+      .sk-tree {
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sk-tree-title {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        color: var(--ink-3);
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .sk-tree-body {
+        padding: 6px 0;
+        overflow-y: auto;
+        max-height: 620px;
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+      }
+
+      .sk-tree-node {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: 0;
+        color: var(--ink-2);
+        padding: 4px 10px;
+        cursor: pointer;
+        font: inherit;
+        white-space: nowrap;
+
+        &:hover {
+          color: var(--ink);
+          background: var(--row-hover);
+        }
+
+        &.is-dir {
+          color: var(--ink);
+          font-weight: 600;
+        }
+
+        &.is-file.is-active {
+          color: var(--accent-ink);
+          background: var(--accent-soft);
+          box-shadow: inset 2px 0 0 var(--accent);
+        }
+      }
+
+      .sk-tree-caret {
+        width: 12px;
+        font-size: 10px;
+        color: var(--ink-3);
+        transition: transform 0.15s;
+        display: inline-block;
+
+        &.is-open {
+          transform: rotate(90deg);
+        }
+      }
+
+      .sk-tree-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sk-tree-size {
+        font-size: 10.5px;
+        color: var(--ink-3);
+      }
+
+      .sk-tree-children {
+        display: none;
+
+        &.is-open {
+          display: block;
+        }
+      }
+
+      .sk-viewer {
+        overflow: auto;
+        min-height: 480px;
+        max-height: 660px;
+      }
+
+      .sk-viewer-md {
+        padding: 24px 28px;
+      }
+
+      .sk-viewer-img {
+        padding: 20px;
+        text-align: center;
+
+        img {
+          max-width: 100%;
+        }
+      }
+
+      .sk-viewer-empty,
+      .sk-empty,
+      .sk-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 60px 20px;
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        letter-spacing: 0.1em;
+        color: var(--ink-3);
+      }
+
+      .sk-spinner {
+        width: 26px;
+        height: 26px;
+        border: 2px solid var(--line-strong);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: sk-spin 0.7s linear infinite;
+      }
+
+      @keyframes sk-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* 代码文件：终端风查看器（复用主题终端视觉） */
+      .sk-code {
+        display: flex;
+        flex-direction: column;
+        min-height: 480px;
+      }
+
+      .sk-code-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 14px;
+        background: var(--term-bg);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: rgba(233, 227, 216, 0.75);
+      }
+
+      .sk-code-copy {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(233, 227, 216, 0.8);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        padding: 3px 10px;
+        cursor: pointer;
+
+        &:hover {
+          border-color: rgba(255, 255, 255, 0.45);
+          color: #e9e3d8;
+        }
+      }
+
+      .sk-code-body {
+        background: var(--term-bg);
+        color: var(--term-ink);
+        padding: 16px 18px;
+        overflow: auto;
+        flex: 1;
+
+        pre {
+          margin: 0;
+          font-family: var(--font-mono);
+          font-size: 13px;
+          line-height: 1.8;
+        }
+
+        code {
+          font-family: var(--font-mono);
+        }
+      }
+
+      .sk-iframe {
+        width: 100%;
+        min-height: 640px;
+        border: 1px solid var(--line);
+        background: var(--card);
+      }
+
+      .sk-file-select {
+        display: block;
+        width: 100%;
+        max-width: 380px;
+        margin: 0 0 12px;
+        padding: 6px 10px;
+        border: 1px solid var(--line);
+        background: var(--card);
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+
+      /* toast */
+      .sk-toast {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%) translateY(12px);
+        background: var(--ink);
+        color: var(--bg);
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        letter-spacing: 0.08em;
+        padding: 10px 20px;
+        opacity: 0;
+        transition: opacity 0.25s, transform 0.25s;
+        pointer-events: none;
+        z-index: 200;
+      }
+
+      .sk-toast.is-show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      @media (max-width: 900px) {
+        .sk-hub {
+          grid-template-columns: 1fr;
+        }
+
+        .sk-tree {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .sk-tree-body {
+          max-height: 260px;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .sk-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .sk-search {
+          min-width: 0;
+          width: 100%;
+        }
+
+        .sk-detail-head {
+          padding: 18px 16px;
+        }
+
+        .sk-viewer-md {
+          padding: 18px 16px;
+        }
+      }
+    </style>
+
+    <div class="container sk-page">
+      <div id="sk-root">
+        <div class="sk-loading"><div class="sk-spinner"></div><p>LOADING…</p></div>
+      </div>
+    </div>
+
+    <div class="sk-toast" id="skToast"></div>
+
+    <script>
+      marked.setOptions({ breaks: true, gfm: true });
+
+      const API_BASE = '/showcase-api';
+      let allSkills = [];
+      let categories = [];
+      let currentCategory = '';
+      let currentSearch = '';
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+      function escapeHtmlAttr(str) {
+        return escapeHtml(str).replace(/"/g, '&quot;');
+      }
+      function formatNumber(n) {
+        if (n == null) return '0';
+        const num = Number(n);
+        if (num >= 10000) return (num / 10000).toFixed(1) + 'w';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+        return String(num);
+      }
+      function guessLanguage(path) {
+        if (!path) return '';
+        const ext = path.split('.').pop().toLowerCase();
+        const map = { md:'markdown', java:'java', js:'javascript', ts:'typescript', jsx:'javascript', tsx:'typescript', py:'python', html:'html', css:'css', json:'json', xml:'xml', yml:'yaml', yaml:'yaml', sh:'shell', sql:'sql', go:'go', rs:'rust', rb:'ruby', php:'php', vue:'html', c:'c', cpp:'cpp', cs:'csharp' };
+        return map[ext] || '';
+      }
+      function showToast(msg) {
+        const t = document.getElementById('skToast');
+        t.textContent = msg;
+        t.classList.add('is-show');
+        clearTimeout(t._t);
+        t._t = setTimeout(() => t.classList.remove('is-show'), 2000);
+      }
+      function copyText(text) {
+        if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板')); return; }
+        const ta = document.createElement('textarea'); ta.value = text;
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        showToast('已复制到剪贴板');
+      }
+
+      function updateContent(html) {
+        const root = document.getElementById('sk-root');
+        if (root) {
+          root.innerHTML = html;
+          window.scrollTo(0, 0);
+        }
+      }
+
+      function navigateTo(path, event) {
+        if (event) { event.preventDefault(); event.stopPropagation(); }
+        window.location.hash = path === '/' ? '#/' : '#/' + (path.startsWith('/') ? path.slice(1) : path);
+      }
+
+      async function init() {
+        try {
+          const [catsData, skillsData] = await Promise.all([
+            fetch(API_BASE + '/categories').then(r => r.json()).catch(() => []),
+            fetch(API_BASE + '/skills').then(r => r.json()).catch(() => [])
+          ]);
+          categories = catsData || [];
+          allSkills = skillsData || [];
+          handleRoute((window.location.hash || '').replace(/^#/, '') || '/');
+          window.addEventListener('hashchange', () => {
+            handleRoute((window.location.hash || '').replace(/^#/, '') || '/');
+          });
+        } catch (e) {
+          console.error('Init error:', e);
+          updateContent('<div class="sk-empty"><p>加载失败，请稍后重试</p></div>');
+        }
+      }
+
+      function handleRoute(path) {
+        const cleanPath = path.replace(/\/+$/, '') || '/';
+        if (cleanPath === '/') renderSkillList();
+        else if (cleanPath.startsWith('/c/')) renderSkillList(decodeURIComponent(cleanPath.substring(3)));
+        else if (cleanPath.startsWith('/d/')) renderSkillDetail(decodeURIComponent(cleanPath.substring(3)));
+        else renderSkillList();
+      }
+
+      // ---------- 列表 ----------
+      function renderSkillList(categoryFilter) {
+        currentCategory = categoryFilter || '';
+        let skills = currentCategory ? allSkills.filter(s => s.category === currentCategory) : allSkills;
+        const search = currentSearch.toLowerCase();
+        if (search) {
+          skills = skills.filter(s =>
+            (s.displayName && s.displayName.toLowerCase().includes(search)) ||
+            (s.name && s.name.toLowerCase().includes(search)) ||
+            (s.summary && s.summary.toLowerCase().includes(search)) ||
+            (s.tags && s.tags.some(t => t.toLowerCase().includes(search)))
+          );
+        }
+
+        const catLabel = currentCategory ? (categories.find(c => c.name === currentCategory)?.displayName || currentCategory) : '';
+
+        let html = `
+          <p class="sk-kicker">LIBRARY / SKILL</p>
+          <h1 class="sk-title">${escapeHtml(catLabel || '技能库')}</h1>
+          <p class="sk-sub">收录可复用的技能包 —— 文档、项目与演示站。</p>
+          <div class="sk-toolbar">
+            <div class="sk-cats">
+              <a class="sk-cat ${currentCategory ? '' : 'is-active'}" href="#/">全部</a>
+              ${categories.map(c => `<a class="sk-cat ${currentCategory === c.name ? 'is-active' : ''}" href="#/c/${encodeURIComponent(c.name)}">${escapeHtml(c.displayName || c.name)}</a>`).join('')}
+            </div>
+            <label class="sk-search"><span>⌕</span><input id="sk-search-input" type="text" placeholder="search…"></label>
+          </div>`;
+
+        if (!skills.length) {
+          html += `<div class="sk-empty"><p>${search ? '没有匹配的技能' : '暂无技能'}</p></div>`;
+        } else {
+          html += '<div class="sk-grid">' + skills.map(renderSkillCard).join('') + '</div>';
+        }
+
+        updateContent(html);
+        attachListEvents();
+      }
+
+      function skillTypeLabel(s) {
+        if (s.sourceType === 'zip') return '演示站';
+        if (s.sourceType === 'external') return '外链';
+        if (s.files && s.files.length > 0) return '项目';
+        return '文档';
+      }
+
+      function renderSkillCard(s) {
+        const version = s.skillVersion || s.version || '';
+        return `
+          <div class="sk-card" data-name="${escapeHtml(s.name)}">
+            <div class="sk-card-title">${escapeHtml(s.displayName || s.name)}</div>
+            <div class="sk-badges">
+              ${s.categoryName ? `<span class="sk-badge is-cat">${escapeHtml(s.categoryName)}</span>` : ''}
+              <span class="sk-badge">${skillTypeLabel(s)}</span>
+              ${version ? `<span class="sk-badge">v${escapeHtml(version)}</span>` : ''}
+            </div>
+            <div class="sk-card-summary">${escapeHtml(s.summary || '暂无描述')}</div>
+            <div class="sk-card-foot">
+              <span>${escapeHtml(s.author || 'boommanpro')}</span>
+              <span class="sk-card-go">查看 →</span>
+            </div>
+          </div>`;
+      }
+
+      function attachListEvents() {
+        document.querySelectorAll('.sk-card').forEach(card => {
+          card.addEventListener('click', () => navigateTo('/d/' + encodeURIComponent(card.dataset.name)));
+        });
+        const searchInput = document.getElementById('sk-search-input');
+        if (searchInput) {
+          searchInput.value = currentSearch;
+          searchInput.addEventListener('input', (e) => {
+            currentSearch = e.target.value;
+            if (window._skSearchTimer) clearTimeout(window._skSearchTimer);
+            window._skSearchTimer = setTimeout(() => renderSkillList(currentCategory), 200);
+          });
+        }
+      }
+
+      // ---------- 详情 ----------
+      async function renderSkillDetail(skillName) {
+        updateContent('<div class="sk-loading"><div class="sk-spinner"></div><p>LOADING…</p></div>');
+        try {
+          const skill = await fetch(API_BASE + '/skills/' + encodeURIComponent(skillName)).then(r => r.json());
+          window._currentSkillName = skillName;
+
+          const backBtn = `<button class="sk-back" onclick="navigateTo('/', event)">← 返回技能库</button>`;
+          const versionBadge = (skill.skillVersion || skill.version) ? `<span class="sk-version">v${escapeHtml(skill.skillVersion || skill.version)}</span>` : '';
+
+          if (skill.sourceType === 'zip') {
+            const isHub = skill.entryFile && skill.entryFile !== 'index.html';
+            const zipUrl = skill.previewUrl || '/showcase/' + encodeURIComponent(skillName) + '/';
+            updateContent(`
+              ${backBtn}
+              <div class="sk-detail-head">
+                <div class="sk-detail-title-row"><h1 class="sk-detail-title">${escapeHtml(skill.displayName || skillName)}</h1>${versionBadge}</div>
+                <p class="sk-detail-summary">${escapeHtml(skill.summary || (isHub ? '技能包' : 'ZIP 演示站'))}</p>
+                <div class="sk-actions">
+                  <button class="sk-btn is-primary" onclick="downloadSkillZip()">下载技能包</button>
+                  <button class="sk-btn" onclick="copyInstallCmd()">复制安装命令</button>
+                </div>
+              </div>
+              ${isHub
+                ? `<div class="sk-hub">
+                    <div class="sk-tree">
+                      <div class="sk-tree-title">FILES · <span class="sk-tree-count"></span></div>
+                      <div class="sk-tree-body" id="sk-tree"><div class="sk-viewer-empty" style="padding:20px;">加载中…</div></div>
+                    </div>
+                    <div class="sk-viewer" id="sk-viewer"><div class="sk-viewer-empty" style="padding:20px;">加载中…</div></div>
+                  </div>`
+                : `<iframe class="sk-iframe" src="${zipUrl}"></iframe>`}
+            `);
+            if (isHub) loadSkillHubTree(skill);
+            return;
+          }
+
+          if (skill.sourceType === 'external' && skill.externalUrl) {
+            updateContent(`
+              ${backBtn}
+              <div class="sk-detail-head">
+                <div class="sk-detail-title-row"><h1 class="sk-detail-title">${escapeHtml(skill.displayName || skillName)}</h1></div>
+                <p class="sk-detail-summary">${escapeHtml(skill.summary || '外部链接')}</p>
+                <div class="sk-actions">
+                  <a class="sk-btn is-primary" href="${escapeHtml(skill.externalUrl)}" target="_blank" rel="noopener">访问外链 ↗</a>
+                </div>
+              </div>
+            `);
+            return;
+          }
+
+          // Markdown / 多文件技能
+          window._currentSkillFiles = skill.files || [];
+          const skillVersion = skill.skillVersion || skill.version || '';
+
+          let html = `
+            ${backBtn}
+            <div class="sk-detail-head">
+              <div class="sk-detail-title-row">
+                <h1 class="sk-detail-title">${escapeHtml(skill.displayName || skillName)}</h1>
+                ${skillVersion ? `<span class="sk-version">v${escapeHtml(skillVersion)}</span>` : ''}
+              </div>
+              <div class="sk-badges" style="margin-bottom:12px;">
+                ${skill.categoryName ? `<span class="sk-badge is-cat">${escapeHtml(skill.categoryName)}</span>` : ''}
+                <span class="sk-badge">${skill.files && skill.files.length > 0 ? '项目' : '文档'}</span>
+              </div>
+              <p class="sk-detail-summary">${escapeHtml(skill.summary || '暂无描述')}</p>
+              <div class="sk-stats">
+                ${skill.author ? `<span>AUTHOR · <strong>${escapeHtml(skill.author)}</strong></span>` : ''}
+              </div>
+              <div class="sk-actions">
+                <button class="sk-btn is-primary" onclick="downloadSkillZip()">下载技能包</button>
+                <button class="sk-btn" onclick="copyInstallCmd()">复制安装命令</button>
+              </div>
+            </div>
+          `;
+
+          const mdContent = skill.content || (skill.files?.find(f => f.language === 'markdown')?.content) || '';
+          const cfs = (skill.files || []).filter(f => f.language && f.language !== 'markdown');
+          window._currentCodeFiles = cfs;
+
+          if (mdContent) {
+            let body = '';
+            try { body = marked.parse(mdContent); } catch (e) { body = '<pre>' + escapeHtml(mdContent) + '</pre>'; }
+            html += '<div class="sk-md post-content">' + body + '</div>';
+          } else if (!cfs.length) {
+            html += '<div class="sk-empty"><p>暂无文档</p></div>';
+          }
+
+          if (cfs.length) {
+            html += `
+              <div style="margin-top:34px;">
+                <div class="sk-code-bar" style="justify-content:flex-start;">
+                  <span>CODE FILES</span>
+                </div>
+                <div class="sk-code" style="min-height:0;">
+                  <div class="sk-code-body">
+                    <select id="sk-file-select" class="sk-file-select">${cfs.map((f, idx) => `<option value="${idx}" ${idx === 0 ? 'selected' : ''}>${escapeHtml(f.path)}</option>`).join('')}</select>
+                    <pre><code id="sk-inline-code" class="language-"></code></pre>
+                  </div>
+                </div>
+              </div>`;
+          }
+
+          updateContent(html);
+
+          if (window.hljs && mdContent) document.querySelectorAll('.sk-md pre code').forEach(b => hljs.highlightElement(b));
+
+          if (cfs.length) {
+            renderCodeFile(0);
+            const sel = document.getElementById('sk-file-select');
+            if (sel) sel.addEventListener('change', () => renderCodeFile(parseInt(sel.value)));
+          }
+        } catch (e) {
+          console.error('Detail error:', e);
+          updateContent('<div class="sk-empty"><p>技能不存在或已被删除</p></div>');
+        }
+      }
+
+      function renderCodeFile(idx) {
+        const codeFiles = window._currentCodeFiles || [];
+        if (!codeFiles || !codeFiles[idx]) return;
+        const f = codeFiles[idx];
+        const codeEl = document.getElementById('sk-inline-code');
+        if (codeEl) {
+          codeEl.textContent = f.content || '';
+          codeEl.className = 'language-' + (f.language || guessLanguage(f.path) || '');
+          if (window.hljs) hljs.highlightElement(codeEl);
+        }
+        window._currentCode = f.content || '';
+      }
+
+      function downloadUrl() {
+        return API_BASE + '/skills/' + encodeURIComponent(window._currentSkillName) + '/download';
+      }
+
+      function downloadSkillZip() {
+        const a = document.createElement('a');
+        a.href = downloadUrl();
+        a.download = '';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      function buildInstallCmd() {
+        const url = new URL(downloadUrl(), location.origin).toString();
+        const safeName = encodeURIComponent(window._currentSkillName);
+        const win = /win/i.test(navigator.platform) || /windows/i.test(navigator.userAgent);
+        const mac = /mac|iphone|ipad/i.test(navigator.platform);
+        if (win) {
+          return `$dir = Join-Path $env:USERPROFILE '.halo\\skills'; New-Item -ItemType Directory -Force -Path $dir | Out-Null; Invoke-WebRequest -Uri '${url}' -OutFile (Join-Path $dir '${safeName}.zip'); Expand-Archive -Path (Join-Path $dir '${safeName}.zip') -DestinationPath (Join-Path $dir '${safeName}') -Force`;
+        }
+        return `mkdir -p "$HOME/.halo/skills" && curl -fsSL '${url}' -o "$HOME/.halo/skills/${safeName}.zip" && unzip -o "$HOME/.halo/skills/${safeName}.zip" -d "$HOME/.halo/skills/${safeName}"`;
+      }
+
+      function copyInstallCmd() {
+        copyText(buildInstallCmd());
+      }
+
+      // ---------- ZIP 技能文件树 ----------
+      function skFileUrl(path) {
+        return '/showcase/' + encodeURIComponent(window._currentSkillName) + '/' +
+          path.split('/').map(encodeURIComponent).join('/');
+      }
+
+      function countFiles(nodes) {
+        let c = 0;
+        (nodes || []).forEach(n => {
+          if (n.type === 'file') c++;
+          if (n.children) c += countFiles(n.children);
+        });
+        return c;
+      }
+
+      function renderTree(nodes) {
+        return (nodes || []).map(n => {
+          if (n.type === 'dir') {
+            return `<div class="sk-tree-dir">
+              <button type="button" class="sk-tree-node is-dir" data-path="${escapeHtmlAttr(n.path)}">
+                <span class="sk-tree-caret">▸</span><span class="sk-tree-name">${escapeHtml(n.name)}</span>
+              </button>
+              <div class="sk-tree-children">${renderTree(n.children)}</div>
+            </div>`;
+          }
+          return `<button type="button" class="sk-tree-node is-file" data-path="${escapeHtmlAttr(n.path)}">
+            <span class="sk-tree-name">${escapeHtml(n.name)}</span>
+            ${n.size ? `<span class="sk-tree-size">${formatNumber(n.size)}</span>` : ''}
+          </button>`;
+        }).join('');
+      }
+
+      async function loadSkillHubTree(skill) {
+        const root = document.getElementById('sk-tree');
+        if (!root) return;
+        try {
+          const resp = await fetch(API_BASE + '/skills/' + encodeURIComponent(window._currentSkillName) + '/tree');
+          if (!resp.ok) throw new Error(resp.status);
+          const tree = await resp.json();
+          const countEl = document.querySelector('.sk-tree-count');
+          if (countEl) countEl.textContent = countFiles(tree) + ' FILES';
+          root.innerHTML = renderTree(tree);
+
+          root.addEventListener('click', (e) => {
+            const node = e.target.closest('.sk-tree-node');
+            if (!node) return;
+            const path = node.dataset.path;
+            if (node.classList.contains('is-dir')) {
+              const children = node.nextElementSibling;
+              const isOpen = children.classList.toggle('is-open');
+              node.querySelector('.sk-tree-caret').classList.toggle('is-open', isOpen);
+            } else {
+              document.querySelectorAll('.sk-tree-node.is-file.is-active').forEach(el => el.classList.remove('is-active'));
+              node.classList.add('is-active');
+              loadHubFile(path);
+            }
+          });
+
+          const target = findPreferredFile(tree, ['skill.md', 'readme.md']) ||
+            (skill.entryFile && skill.entryFile !== 'index.html' ? skill.entryFile : null) ||
+            firstFilePath(tree);
+          if (target) {
+            const elm = root.querySelector('.sk-tree-node.is-file[data-path="' + window.CSS.escape(target).replace(/"/g, '\\"') + '"]');
+            if (elm) elm.classList.add('is-active');
+            loadHubFile(target);
+          }
+        } catch (e) {
+          root.innerHTML = '<div class="sk-viewer-empty" style="padding:20px;">加载失败</div>';
+        }
+      }
+
+      function findPreferredFile(nodes, names) {
+        for (const n of (nodes || [])) {
+          if (n.type === 'file' && names.includes((n.path || '').split('/').pop().toLowerCase())) return n.path;
+        }
+        for (const n of (nodes || [])) {
+          if (n.type === 'dir') {
+            const f = findPreferredFile(n.children, names);
+            if (f) return f;
+          }
+        }
+        return null;
+      }
+
+      function firstFilePath(nodes) {
+        for (const n of (nodes || [])) {
+          if (n.type === 'file') return n.path;
+          const f = firstFilePath(n.children);
+          if (f) return f;
+        }
+        return null;
+      }
+
+      async function loadHubFile(path) {
+        const viewer = document.getElementById('sk-viewer');
+        if (!viewer) return;
+        viewer.innerHTML = '<div class="sk-viewer-empty" style="padding:20px;">加载中…</div>';
+        try {
+          const url = skFileUrl(path);
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error(resp.status);
+          const text = await resp.text();
+          const lower = path.toLowerCase();
+          if (/(\.md|\.markdown)$/.test(lower)) {
+            const div = document.createElement('div');
+            div.className = 'sk-viewer-md post-content';
+            try { div.innerHTML = marked.parse(text); } catch (err) { div.textContent = text; }
+            viewer.innerHTML = '';
+            viewer.appendChild(div);
+            if (window.hljs) div.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+          } else if (/(\.(svg|png|jpe?g|gif|webp|bmp|ico))$/.test(lower)) {
+            viewer.innerHTML = '<div class="sk-viewer-img"><img src="' + escapeHtmlAttr(url) + '" alt="' + escapeHtmlAttr(path) + '"></div>';
+          } else {
+            viewer.innerHTML = `
+              <div class="sk-code">
+                <div class="sk-code-bar">
+                  <span>${escapeHtml(path)}</span>
+                  <button class="sk-code-copy" type="button">复制</button>
+                </div>
+                <div class="sk-code-body"><pre><code class="language-${escapeHtml(guessLanguage(path))}"></code></pre></div>
+              </div>`;
+            const codeEl = viewer.querySelector('code');
+            codeEl.textContent = text;
+            if (window.hljs) hljs.highlightElement(codeEl);
+            viewer.querySelector('.sk-code-copy').addEventListener('click', () => copyText(text));
+          }
+        } catch (e) {
+          viewer.innerHTML = '<div class="sk-viewer-empty" style="padding:20px;">无法加载文件</div>';
+        }
+      }
+
+      window.navigateTo = navigateTo;
+      window.downloadSkillZip = downloadSkillZip;
+      window.copyInstallCmd = copyInstallCmd;
+
+      document.addEventListener('DOMContentLoaded', init);
+    </script>
+  </th:block>
+</html>

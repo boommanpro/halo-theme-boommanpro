@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build & package
+        run: pnpm run zip
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify package version matches tag
+        run: |
+          PKG_VERSION=$(grep -oP 'version:\s*\K\S+' theme.yaml)
+          if [ "$PKG_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::theme.yaml version ($PKG_VERSION) does not match tag (${{ steps.version.outputs.version }})"
+            exit 1
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: halo-theme-boommanpro-${{ steps.version.outputs.version }}.zip
+          generate_release_notes: true
+          body: |
+            ## 安装
+
+            1. 下载附件 `halo-theme-boommanpro-${{ steps.version.outputs.version }}.zip`
+            2. Halo Console → 外观 → 主题 → 安装 → 上传
+            3. 启用主题
+
+            > 环境要求：Halo >= 2.20.0

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = ${error.status} + ' · ' + ${#strings.defaultString(error.title, 'Error')},
+    description = ${site.subtitle},
+    active = 'error',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <div class="container">
+      <div class="error-wrap">
+        <div class="error-code">
+          <span th:text="${#strings.substring(error.status, 0, 1)}">4</span><span class="dot" th:text="${#strings.substring(error.status, 1, 2)}">0</span><span th:text="${#strings.substring(error.status, 2, 3)}">4</span>
+        </div>
+        <p class="error-msg" th:text="${#strings.defaultString(error.title, 'PAGE NOT FOUND')} + ' · ' + ${#strings.defaultString(error.detail, '该页面不存在或已被移除')}"></p>
+        <div class="hero-cta" style="justify-content: center">
+          <a class="btn btn-solid" th:href="${site.url}">返回首页</a>
+          <a class="btn btn-ghost" th:href="@{/archives}">浏览归档</a>
+        </div>
+      </div>
+    </div>
+  </th:block>
+</html>

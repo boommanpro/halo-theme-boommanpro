@@ -1,0 +1,4 @@
+node_modules/
+templates/assets/dist/
+*.zip
+.DS_Store

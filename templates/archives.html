@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = '归档',
+    description = ${site.subtitle},
+    active = 'archives',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <div class="container">
+      <div class="page-hero">
+        <p class="page-kicker">ARCHIVES</p>
+        <h1 class="page-title">归档</h1>
+        <p class="page-desc" th:with="allPosts = ${postFinder.list(1, 0)}">
+          共收录 <span th:text="${#lists.size(allPosts.items)}"></span> 篇 · 按时间倒序
+        </p>
+      </div>
+
+      <th:block th:each="archive : ${postFinder.archives(1, 0).items}">
+        <div class="archive-year" th:with="yearCount=${#aggregates.sum(archive.months.![#lists.size(posts)])}">
+          <span th:text="${archive.year}"></span>
+          <span class="arc-count" th:text="'共 ' + ${yearCount} + ' 篇'"></span>
+        </div>
+
+        <th:block th:each="month : ${archive.months}">
+          <div class="archive-month" th:text="${#numbers.formatInteger(month.month, 2)} + ' 月'"></div>
+          <ul class="archive-list">
+            <li>
+              <a class="archive-item" th:each="post : ${month.posts}" th:href="${post.status.permalink}">
+                <span class="arc-day" th:text="${#dates.format(post.spec.publishTime, 'MM-dd')}"></span>
+                <span class="row-main">
+                  <span class="arc-title" th:text="${post.spec.title}"></span>
+                  <span class="arc-cats">
+                    <th:block th:each="cat, catIter : ${post.categories}">
+                      <th:block th:if="${catIter.index > 0}"> · </th:block>[[${cat.spec.displayName}]]
+                    </th:block>
+                  </span>
+                </span>
+                <span class="row-arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          </ul>
+        </th:block>
+      </th:block>
+    </div>
+  </th:block>
+</html>

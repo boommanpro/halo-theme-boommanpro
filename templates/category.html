@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = ${category.spec.displayName},
+    description = ${category.spec.description},
+    active = 'categories',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <th:block th:with="posts = ${postFinder.listByCategory(1, 0, category.metadata.name)}">
+      <div class="container">
+        <div class="page-hero">
+          <p class="page-kicker">CATEGORY</p>
+          <h1 class="page-title" th:text="${category.spec.displayName}"></h1>
+          <p class="page-desc" th:text="'共 ' + ${posts.total} + ' 篇文章'"></p>
+        </div>
+
+        <div class="article-list">
+          <a class="article-row" th:each="post, iter : ${posts.items}" th:href="${post.status.permalink}">
+            <span class="row-no" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
+            <span class="row-main">
+              <span class="row-title" th:text="${post.spec.title}"></span>
+              <span class="row-cats">
+                <th:block th:each="cat, catIter : ${post.categories}">
+                  <th:block th:if="${catIter.index > 0}"> · </th:block>[[${cat.spec.displayName}]]
+                </th:block>
+              </span>
+            </span>
+            <span class="row-date" th:text="${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"></span>
+            <span class="row-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </th:block>
+  </th:block>
+</html>

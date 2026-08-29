@@ -1,0 +1,353 @@
+# nonk8s
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: halo-theme-boommanpro-setting
+spec:
+  forms:
+    - group: global
+      label: 全局
+      formSchema:
+        - $formkit: text
+          name: wordmark
+          label: 报头刊名
+          value: "boommanpro."
+          help: 首页报头与页脚的大字刊名，末尾句点将渲染为主题色
+        - $formkit: text
+          name: masthead_tagline
+          label: 报头副标题
+          value: "爱生活，爱 Coding ....."
+        - $formkit: text
+          name: masthead_vol
+          label: 报头卷号
+          value: "个人技术期刊 · VOL.2026"
+        - $formkit: repeater
+          name: socials
+          label: 顶部信息条链接
+          value:
+            - name: GitHub
+              url: https://github.com/boommanpro
+            - name: Email
+              url: mailto:boommanpro@gmail.com
+            - name: CSDN
+              url: https://blog.csdn.net/boom_man/
+          children:
+            - $formkit: text
+              name: name
+              label: 名称
+              required: true
+            - $formkit: text
+              name: url
+              label: 链接
+              required: true
+        - $formkit: radio
+          name: comment_enabled
+          label: 评论区开关
+          value: true
+          options:
+            - label: 开启
+              value: true
+            - label: 关闭
+              value: false
+        - $formkit: text
+          name: icp
+          label: ICP 备案号
+          value: ""
+          help: 页脚展示的备案号，留空则不显示
+
+    - group: hero
+      label: 首页 · 开篇
+      formSchema:
+        - $formkit: text
+          name: kicker
+          label: 眉题
+          value: "PERSONAL JOURNAL OF CODE · 个人技术期刊"
+        - $formkit: textarea
+          name: title
+          label: 大标题（支持 HTML）
+          value: "把每一个想法，<br><em>编译</em>成可运行的<em>现实</em>。"
+          help: 可使用 br 换行、em 强调（强调部分显示为主题色）
+        - $formkit: textarea
+          name: subtitle
+          label: 副标题
+          value: "我是王启孟，一名写了 7 年 Java 的后台工程师。这里记录我用 AI Coding 构建的一切——从工作流引擎、Halo 插件，到声音克隆与浏览器脚本。写作即存档，构建即思考。"
+        - $formkit: text
+          name: cta_primary_text
+          label: 主按钮文字
+          value: "浏览文章索引"
+        - $formkit: text
+          name: cta_primary_url
+          label: 主按钮链接
+          value: "#articles"
+        - $formkit: text
+          name: cta_secondary_text
+          label: 次按钮文字
+          value: "GitHub ↗"
+        - $formkit: text
+          name: cta_secondary_url
+          label: 次按钮链接
+          value: "https://github.com/boommanpro"
+        - $formkit: text
+          name: vertical_note
+          label: 竖排装饰文字
+          value: "爱生活 · 爱 CODING · 持续构建中"
+        - $formkit: repeater
+          name: stats
+          label: 统计数字（3 项）
+          value:
+            - value: 7
+              unit: 年
+              label: 后端开发经验
+            - value: 12
+              unit: 篇
+              label: AI CODING 实践实录
+            - value: 6
+              unit: 个
+              label: 精选开源项目
+          children:
+            - $formkit: number
+              name: value
+              label: 数值
+              required: true
+            - $formkit: text
+              name: unit
+              label: 单位
+            - $formkit: text
+              name: label
+              label: 标签
+              required: true
+        - $formkit: repeater
+          name: terminal
+          label: 终端演示内容
+          value:
+            - type: command
+              text: "whoami"
+            - type: output
+              text: "boommanpro · 王启孟（Java 后台 / 7y）"
+            - type: command
+              text: "cat ~/motto.txt"
+            - type: output
+              text: "爱生活，爱 Coding ....."
+            - type: command
+              text: "git log --oneline | head -3"
+            - type: output
+              text: "f3a9c21 feat: skillshow — 技能展示插件"
+            - type: output
+              text: "b7e4d08 feat: gaia — Agent 工作流编排"
+          children:
+            - $formkit: select
+              name: type
+              label: 行类型
+              value: command
+              options:
+                - label: 命令（$ 提示符）
+                  value: command
+                - label: 输出
+                  value: output
+            - $formkit: text
+              name: text
+              label: 内容
+              required: true
+
+    - group: featured
+      label: 首页 · 封面故事
+      formSchema:
+        - $formkit: radio
+          name: mock_enabled
+          label: 显示右侧界面示意
+          value: true
+          options:
+            - label: 显示
+              value: true
+            - label: 隐藏
+              value: false
+        - $formkit: text
+          name: mock_url
+          label: 示意浏览器地址
+          value: "boommanpro.cn/skills"
+        - $formkit: text
+          name: mock_caption
+          label: 示意图注
+          value: "SKILLSHOW · HALO 插件界面示意"
+        - $formkit: repeater
+          name: mock_skills
+          label: 界面示意中的技能卡片
+          value:
+            - name: tts-skill
+              desc: 声音克隆 · 转写两步法
+              hot: true
+              badge: 常用
+            - name: pdf-skill
+              desc: 文档解析与生成
+            - name: docx-skill
+              desc: Word 长文写作
+            - name: xlsx-skill
+              desc: 表格数据处理
+            - name: web-skill
+              desc: 单页站点生成
+            - name: code-skill
+              desc: 代码审查重构
+          children:
+            - $formkit: text
+              name: name
+              label: 名称
+              required: true
+            - $formkit: text
+              name: desc
+              label: 描述
+            - $formkit: radio
+              name: hot
+              label: 高亮
+              value: false
+              options:
+                - label: 是
+                  value: true
+                - label: 否
+                  value: false
+            - $formkit: text
+              name: badge
+              label: 角标（高亮时显示）
+
+    - group: manifesto
+      label: 首页 · 宣言
+      formSchema:
+        - $formkit: textarea
+          name: quote
+          label: 宣言引语（支持 HTML）
+          value: "在 SOTA 范式之外，<br>垂类场景里藏着 AI 工程的<br>真实边界。"
+        - $formkit: text
+          name: source_text
+          label: 来源文字
+          value: "摘自《在 SOTA 范式之外：一种垂类非探索场景的 AI 工程探索》"
+        - $formkit: text
+          name: source_url
+          label: 来源链接
+          value: "/post/ai-engineering-outside-sota"
+
+    - group: projects
+      label: 首页 · 精选项目
+      formSchema:
+        - $formkit: repeater
+          name: items
+          label: 项目卡片
+          value:
+            - name: Gaia 工作流引擎
+              desc: 可视化 AI 工作流编辑器。综合 Prompt、提示词工程、向量与图技术，探索非 SOTA 模型下 Agent 的自动化编排能力。
+              url: https://github.com/boommanpro/gaia-workflow-engine
+              year: "2026"
+              tags: "AI Agent, 可视化编排, MIT"
+              link_text: 访问仓库
+            - name: SkillShow 插件
+              desc: 为 Halo 开发的技能展示插件。让每一个 Skill 拥有独立展示页，借鉴各类 skillhub，轻量地组织个人技能资产。
+              url: /post/ai-coding-halo-plugin-skillshow
+              year: "2026"
+              tags: "Halo, Plugin, 应用市场"
+              link_text: 查看文章
+            - name: tts-skill
+              desc: 基于 OmniVoice 的声音克隆技能。用「转写 → 克隆」两步法获得高质量声音克隆，附完整最佳实践文档。
+              url: https://github.com/boommanpro/tts-skill
+              year: "2026"
+              tags: "TTS, 声音克隆, MIT"
+              link_text: 访问仓库
+          children:
+            - $formkit: text
+              name: name
+              label: 名称
+              required: true
+            - $formkit: textarea
+              name: desc
+              label: 描述
+            - $formkit: text
+              name: url
+              label: 链接
+              required: true
+            - $formkit: text
+              name: year
+              label: 年份
+            - $formkit: text
+              name: tags
+              label: 标签（逗号分隔）
+            - $formkit: text
+              name: link_text
+              label: 链接文字
+              value: "访问仓库"
+
+    - group: about
+      label: 首页 · 关于
+      formSchema:
+        - $formkit: text
+          name: name
+          label: 姓名
+          value: "王启孟"
+        - $formkit: text
+          name: motto
+          label: 座右铭
+          value: "爱生活，爱 CODING ....."
+        - $formkit: textarea
+          name: bio
+          label: 简介
+          value: "1996 年生，山西大学软件工程本科，7 年 Java 后台开发经验。正在用 AI Coding 的方式，重新定义一个人能做多少事。"
+        - $formkit: repeater
+          name: rows
+          label: 信息列表
+          value:
+            - key: 现居 / 方向
+              value: 中国 · 期望城市 北京
+            - key: 经历
+              value: 7 年 Java 后台开发工程师
+            - key: 教育
+              value: 山西大学 · 软件工程 · 本科
+            - key: 关注领域
+              value: AI Coding · 大模型应用 · Agent 工作流 · 工具链
+            - key: GitHub
+              value: "<a href=\"https://github.com/boommanpro\" target=\"_blank\" rel=\"noopener\">github.com/boommanpro</a>"
+            - key: Email
+              value: "<a href=\"mailto:boommanpro@gmail.com\">boommanpro@gmail.com</a>"
+            - key: 更多
+              value: "<a href=\"https://blog.csdn.net/boom_man/\" target=\"_blank\" rel=\"noopener\">CSDN 博客</a>"
+          children:
+            - $formkit: text
+              name: key
+              label: 项目名
+              required: true
+            - $formkit: textarea
+              name: value
+              label: 内容（支持 HTML）
+              required: true
+
+    - group: post
+      label: 文章
+      formSchema:
+        - $formkit: radio
+          name: toc_enabled
+          label: 显示文章目录（TOC）
+          value: true
+          options:
+            - label: 显示
+              value: true
+            - label: 隐藏
+              value: false
+        - $formkit: number
+          name: related_count
+          label: 相关文章数量
+          value: 3
+        - $formkit: textarea
+          name: copyright
+          label: 版权声明
+          value: "本文采用 CC BY 4.0 许可协议，转载请注明出处。"
+
+    - group: footer
+      label: 页脚
+      formSchema:
+        - $formkit: text
+          name: tagline
+          label: 页脚标语
+          value: "爱生活，爱 CODING ....."
+        - $formkit: text
+          name: bottom_left
+          label: 底部左侧文字
+          value: "把每一个想法，编译成可运行的现实"
+        - $formkit: text
+          name: bottom_right
+          label: 底部右侧文字
+          value: "纸与墨双主题 · NOTO SERIF SC × JETBRAINS MONO"

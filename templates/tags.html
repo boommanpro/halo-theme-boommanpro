@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = '标签',
+    description = ${site.subtitle},
+    active = 'tags',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <div class="container">
+      <div class="page-hero">
+        <p class="page-kicker">TAGS</p>
+        <h1 class="page-title">标签</h1>
+        <p class="page-desc" th:with="tags = ${tagFinder.listAll()}">
+          共 <span th:text="${#lists.size(tags)}"></span> 个标签
+        </p>
+      </div>
+
+      <div class="tag-cloud">
+        <a class="chip" th:each="tag : ${tagFinder.listAll()}" th:href="${tag.status.permalink}">
+          <span th:text="${tag.spec.displayName}"></span><span class="cnt" th:text="${tag.status.postCount == null ? 0 : tag.status.postCount}"></span>
+        </a>
+      </div>
+    </div>
+  </th:block>
+</html>
