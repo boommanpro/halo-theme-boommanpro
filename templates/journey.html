@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html
+  th:replace="~{modules/layout :: html (title = 'Journey · 旅程',
+    description = '一个可探索的交互式旅程主页',
+    active = 'journey',
+    variant = 'inner',
+    content = ~{::content})}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <th:block th:fragment="content">
+    <style>
+      /* ============================================================
+         纸墨旅程（Paper & Ink Journey）
+         全部使用主题 CSS 变量，自动适配深浅色与主题字体
+         ============================================================ */
+      .j-page {
+        padding-top: clamp(30px, 4.5vw, 54px);
+      }
+
+      /* ---------- 报头区（期刊式） ---------- */
+      .j-kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.3em;
+        color: var(--accent-ink);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .j-kicker::after {
+        content: "";
+        flex: 1;
+        border-top: 1px solid var(--line);
+      }
+      .j-title {
+        font-family: var(--font-serif);
+        font-weight: 900;
+        font-size: clamp(28px, 4.2vw, 46px);
+        line-height: 1.22;
+        margin-bottom: 10px;
+      }
+      .j-sub {
+        font-size: 15px;
+        font-weight: 300;
+        color: var(--ink-2);
+        margin-bottom: 26px;
+      }
+
+      /* ---------- 舞台 ---------- */
+      .j-stage {
+        position: relative;
+        height: clamp(360px, 50vh, 540px);
+        overflow: hidden;
+        border-top: 1px solid var(--line-strong);
+        border-bottom: 1px solid var(--line-strong);
+        background: var(--bg);
+        touch-action: pan-y;
+      }
+      .j-stage-inner { position: absolute; inset: 0; }
+
+      /* 天空 */
+      .j-sky { position: absolute; inset: 0; overflow: hidden; }
+      .j-star {
+        position: absolute;
+        width: 3px; height: 3px;
+        background: var(--ink-3);
+        animation: j-twinkle 4s ease-in-out infinite;
+      }
+      @keyframes j-twinkle { 0%, 100% { opacity: .15 } 50% { opacity: .7 } }
+      .j-orb {
+        position: absolute; top: 12%; right: 13%;
+        width: 44px; height: 44px; border-radius: 50%;
+        border: 2px solid var(--ink-2);
+      }
+      .j-orb::after {
+        content: ""; position: absolute; inset: 7px;
+        border-radius: 50%; border: 1px solid var(--line);
+      }
+      .j-bird {
+        position: absolute;
+        width: 18px; height: 8px;
+        border-top: 2px solid var(--ink-3);
+        border-radius: 50% 50% 0 0;
+      }
+      .j-bird::after {
+        content: ""; position: absolute; right: -12px; top: 3px;
+        width: 12px; height: 6px;
+        border-top: 2px solid var(--ink-3);
+        border-radius: 50% 50% 0 0;
+      }
+
+      /* 远景轮廓线 */
+      .j-skyline {
+        position: absolute; bottom: 88px; left: 0; right: 0; height: 96px;
+        background: repeating-linear-gradient(
+          90deg,
+          transparent 0 30px,
+          var(--line) 30px 34px,
+          transparent 34px 92px
+        );
+        -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 50%, #000 100%);
+                mask-image: linear-gradient(180deg, transparent 0, #000 50%, #000 100%);
+        opacity: .55;
+      }
+
+      /* 街道：双细线 */
+      .j-street {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 88px;
+        border-top: 1px solid var(--line-strong);
+        background:
+          repeating-linear-gradient(90deg, transparent 0 44px, var(--line) 44px 46px, transparent 46px 88px)
+          0 30px / 100% 1px no-repeat,
+          var(--bg);
+      }
+
+      /* ---------- 建筑世界 ---------- */
+      .j-world {
+        position: absolute; bottom: 88px; left: 0;
+        height: 330px;
+        display: flex; align-items: flex-end; justify-content: center;
+        will-change: transform;
+      }
+      .j-building {
+        position: relative;
+        width: 560px; height: 330px;
+        background: none; border: none; padding: 0;
+        display: flex; align-items: flex-end; justify-content: center;
+        cursor: pointer;
+      }
+      .j-building:focus { outline: none; }
+      .j-building svg { display: block; shape-rendering: crispEdges; }
+
+      /* 版画风建筑配色 */
+      .j-building .bf { fill: var(--card); stroke: var(--ink); }          /* 建筑面 */
+      .j-building .bl { fill: none; stroke: var(--ink); }                  /* 墨线 */
+      .j-building .bd { fill: var(--ink); }                                /* 墨块 */
+      .j-building .bw { fill: var(--bg); stroke: var(--ink-2); }           /* 窗 */
+      .j-building .ba { fill: var(--accent); }                             /* 强调 */
+      .j-building .bh { fill: none; stroke: var(--ink-2); stroke-dasharray: 3 3; } /* 虚线细节 */
+
+      .j-building .art { transition: transform .25s ease; }
+      .j-building:hover .art,
+      .j-building:focus-visible .art { transform: translateY(-5px); }
+      .j-building.current .bw { fill: var(--accent); stroke: var(--accent-ink); }
+      .j-building.current .art { transform: translateY(-2px); }
+
+      .j-building .tag {
+        position: absolute; top: 20px; left: 50%;
+        transform: translate(-50%, 6px);
+        background: var(--card);
+        border: 1px solid var(--line-strong);
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        letter-spacing: 0.08em;
+        padding: 6px 14px;
+        white-space: nowrap;
+        opacity: 0; pointer-events: none;
+        transition: opacity .2s, transform .2s;
+      }
+      .j-building .tag .t-period { color: var(--ink-3); margin-left: 9px; }
+      .j-building:hover .tag,
+      .j-building:focus-visible .tag,
+      .j-building.current .tag { opacity: 1; transform: translate(-50%, 0); }
+      .j-building.current .tag { border-color: var(--accent); }
+
+      /* ---------- 像素小人（版画配色） ---------- */
+      .j-player {
+        position: absolute; bottom: 88px; left: 0; z-index: 12;
+        width: 60px; height: 96px; pointer-events: none;
+        will-change: transform;
+      }
+      .j-player .p-shadow {
+        position: absolute; bottom: -3px; left: 8px; width: 44px; height: 5px;
+        border-radius: 50%; background: var(--line);
+      }
+      .j-player .p-flip { position: absolute; inset: 0; }
+      .j-player.face-left .p-flip { transform: scaleX(-1); }
+      .j-player .p-leg {
+        position: absolute; bottom: 0; width: 12px; height: 16px; background: var(--ink-2);
+      }
+      .j-player .p-leg-l { left: 17px; }
+      .j-player .p-leg-r { left: 31px; }
+      .j-player .p-bob { position: absolute; inset: 0; }
+      .j-player .p-bag {
+        position: absolute; bottom: 20px; left: 3px; width: 11px; height: 26px;
+        background: var(--accent-ink);
+      }
+      .j-player .p-body {
+        position: absolute; bottom: 16px; left: 9px; width: 42px; height: 32px;
+        background: var(--ink);
+      }
+      .j-player .p-face {
+        position: absolute; bottom: 48px; left: 13px; width: 34px; height: 20px;
+        background: var(--bg);
+        border: 2px solid var(--ink);
+        border-bottom: none;
+      }
+      .j-player .p-eye {
+        position: absolute; bottom: 57px; left: 39px; width: 4px; height: 5px;
+        background: var(--ink);
+      }
+      .j-player .p-hair {
+        position: absolute; bottom: 66px; left: 11px; width: 38px; height: 10px;
+        background: var(--ink);
+      }
+      .j-player .p-cap {
+        position: absolute; bottom: 76px; left: 9px; width: 42px; height: 11px;
+        background: var(--accent);
+      }
+      .j-player .p-cap-top {
+        position: absolute; bottom: 87px; left: 14px; width: 32px; height: 4px;
+        background: var(--accent);
+      }
+      .j-player .p-cap-brim {
+        position: absolute; bottom: 76px; left: 49px; width: 12px; height: 4px;
+        background: var(--accent);
+      }
+      @keyframes jLegA { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+      @keyframes jLegB { 0%, 100% { transform: translateY(-7px); } 50% { transform: translateY(0); } }
+      @keyframes jBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+      .j-player.walking .p-leg-l { animation: jLegA .22s linear infinite; }
+      .j-player.walking .p-leg-r { animation: jLegB .22s linear infinite; }
+      .j-player.walking .p-bob { animation: jBob .22s linear infinite; }
+
+      /* ---------- 舞台浮层 ---------- */
+      .j-stage-copy {
+        position: absolute; top: 18px; left: 0; right: 0; z-index: 10;
+        display: flex; justify-content: space-between; align-items: flex-start;
+        padding: 0 clamp(16px, 3vw, 32px);
+        pointer-events: none;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        letter-spacing: 0.14em;
+        color: var(--ink-3);
+      }
+      .j-stage-copy b { color: var(--accent-ink); font-weight: 700; }
+
+      /* ---------- 空状态 ---------- */
+      .j-empty {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 12px; z-index: 10; text-align: center; padding: 20px;
+      }
+      .j-empty[hidden] { display: none; }
+      .j-empty .e-mark { font-family: var(--font-mono); font-size: 26px; color: var(--ink-3); }
+      .j-empty .e-text { font-size: 14px; color: var(--ink-2); line-height: 1.9; }
+
+      /* ---------- 位置栏 ---------- */
+      .j-locbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 14px; flex-wrap: wrap;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .j-loc-left {
+        display: flex; align-items: baseline; gap: 12px; min-width: 0;
+      }
+      .j-loc-left::before {
+        content: "■";
+        color: var(--accent);
+        font-size: 9px;
+        align-self: center;
+      }
+      .j-loc-name {
+        font-family: var(--font-serif);
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .j-loc-period {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+      }
+      .j-hint {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.1em;
+        color: var(--ink-3);
+      }
+      .j-hint kbd {
+        border: 1px solid var(--line);
+        border-bottom-width: 2px;
+        border-radius: 3px;
+        padding: 0 5px;
+        margin: 0 1px;
+        color: var(--ink-2);
+        font-family: var(--font-mono);
+      }
+
+      /* ---------- 时间轴（期刊目录式） ---------- */
+      .j-toc-head {
+        display: flex; align-items: baseline; justify-content: space-between;
+        gap: 12px; flex-wrap: wrap;
+        padding: 16px 0 12px;
+      }
+      .j-progress {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        letter-spacing: 0.14em;
+        color: var(--ink-2);
+      }
+      .j-progress b { color: var(--accent-ink); }
+      .j-toc {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+        border-top: 1px solid var(--line-strong);
+        border-bottom: 1px solid var(--line-strong);
+      }
+      .j-node {
+        position: relative;
+        text-align: left;
+        background: none; border: none; cursor: pointer;
+        padding: 13px 14px 13px 16px;
+        border-left: 1px solid var(--line);
+        color: var(--ink-2);
+        transition: background-color .18s, color .18s;
+      }
+      .j-node:first-child { border-left: none; }
+      .j-node:hover { background: var(--row-hover); color: var(--ink); }
+      .j-node.current { background: var(--accent-soft); color: var(--ink); }
+      .j-node.current::before {
+        content: "";
+        position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: var(--accent);
+      }
+      .j-node .n-no {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        color: var(--ink-3);
+      }
+      .j-node.current .n-no { color: var(--accent-ink); }
+      .j-node .n-name {
+        display: block;
+        font-family: var(--font-serif);
+        font-weight: 700;
+        font-size: 14.5px;
+        margin: 4px 0 2px;
+      }
+      .j-node .n-period {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-3);
+      }
+      .j-node.visited .n-no::after { content: " ✓"; color: var(--accent-ink); }
+
+      /* ---------- 结语 ---------- */
+      .j-after {
+        text-align: center;
+        padding: clamp(36px, 6vw, 64px) 0 8px;
+      }
+      .j-after .aw-kicker {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.34em;
+        color: var(--ink-3);
+        margin-bottom: 14px;
+      }
+      .j-after .aw-text {
+        font-family: var(--font-serif);
+        font-size: clamp(16px, 2.2vw, 20px);
+        color: var(--ink-2);
+      }
+      .j-after .aw-links {
+        margin-top: 22px;
+        display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+      }
+
+      /* ---------- 阅读列表 ---------- */
+      .j-readings {
+        padding: 26px 0 30px;
+        max-width: 860px;
+        margin: 0 auto;
+      }
+      .j-readings h2 {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        color: var(--ink-2);
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 14px;
+      }
+      .j-readings h2::before { content: "＋"; color: var(--accent); }
+      .j-readings details {
+        border-top: 1px solid var(--line);
+        transition: background-color .18s;
+      }
+      .j-readings details:last-child { border-bottom: 1px solid var(--line); }
+      .j-readings details:hover { background: var(--row-hover); }
+      .j-readings summary {
+        padding: 13px 6px;
+        cursor: pointer; list-style: none;
+        display: flex; align-items: baseline; gap: 12px;
+        font-size: 14px;
+      }
+      .j-readings summary::-webkit-details-marker { display: none; }
+      .j-readings summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .j-readings .r-no {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--accent-ink);
+      }
+      .j-readings .r-name { font-weight: 500; }
+      .j-readings .r-period {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--ink-3);
+        margin-left: auto;
+      }
+      .j-readings .r-body {
+        padding: 2px 6px 18px 40px;
+        font-size: 14px;
+        line-height: 2;
+        color: var(--ink-2);
+        white-space: pre-wrap;
+      }
+
+      /* ---------- 模态框（期刊卡片风） ---------- */
+      .j-overlay {
+        position: fixed; inset: 0; z-index: 400;
+        background: color-mix(in srgb, var(--bg) 72%, transparent);
+        backdrop-filter: blur(5px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px;
+        opacity: 0; pointer-events: none;
+        transition: opacity .22s;
+      }
+      .j-overlay.open { opacity: 1; pointer-events: auto; }
+      .j-modal {
+        width: min(580px, 100%);
+        max-height: 86vh; overflow-y: auto;
+        background: var(--card);
+        border: 1px solid var(--line-strong);
+        padding: 30px 32px 26px;
+        position: relative;
+        transform: translateY(14px);
+        transition: transform .22s;
+      }
+      .j-overlay.open .j-modal { transform: none; }
+      .j-modal-close {
+        position: absolute; top: 12px; right: 12px;
+        width: 30px; height: 30px;
+        border: 1px solid var(--line); border-radius: 50%;
+        background: none; color: var(--ink-2);
+        font-size: 14px; cursor: pointer;
+        transition: color .15s, border-color .15s;
+      }
+      .j-modal-close:hover { color: var(--accent-ink); border-color: var(--accent); }
+      .m-kicker {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.24em;
+        color: var(--ink-3);
+        margin-bottom: 14px;
+      }
+      .m-kicker b { color: var(--accent-ink); }
+      .m-cat {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.16em;
+        color: var(--accent-ink);
+        border: 1px solid var(--accent);
+        padding: 3px 12px;
+        margin-bottom: 16px;
+      }
+      .m-title {
+        font-family: var(--font-serif);
+        font-weight: 900;
+        font-size: 25px;
+        margin-bottom: 14px;
+      }
+      .m-summary {
+        font-size: 14px; color: var(--ink-2); line-height: 1.9;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 14px;
+      }
+      .m-content {
+        font-size: 14.5px; line-height: 2.05; color: var(--ink-2);
+        white-space: pre-wrap;
+      }
+      .m-next {
+        margin-top: 26px; width: 100%;
+        background: var(--ink); color: var(--bg);
+        border: 1px solid var(--ink);
+        font-family: var(--font-mono);
+        font-size: 12.5px; letter-spacing: 0.12em;
+        padding: 14px 26px; cursor: pointer;
+        transition: background-color .2s, border-color .2s;
+      }
+      .m-next:hover { background: var(--accent); border-color: var(--accent); color: #fcf9f2; }
+
+      /* 帮助模态框 */
+      .j-help h3 {
+        font-family: var(--font-serif);
+        font-size: 19px; font-weight: 900;
+        margin-bottom: 18px;
+      }
+      .j-help ul { list-style: none; }
+      .j-help li {
+        display: flex; gap: 14px; align-items: center;
+        padding: 10px 0;
+        font-size: 13.5px; color: var(--ink-2);
+        border-bottom: 1px dashed var(--line);
+      }
+      .j-help li:last-child { border-bottom: none; }
+      .j-help kbd {
+        min-width: 88px; text-align: center;
+        font-family: var(--font-mono); font-size: 11px;
+        background: var(--bg);
+        border: 1px solid var(--line-strong);
+        padding: 5px 10px;
+        color: var(--ink);
+      }
+
+      .j-skip {
+        position: absolute; left: -9999px; top: 0;
+        background: var(--accent); color: #fcf9f2;
+        padding: 8px 16px; z-index: 500;
+      }
+      .j-skip:focus { left: 12px; top: 12px; }
+
+      /* 键盘焦点可见性（建筑/时间轴等自定义控件） */
+      .j-building:focus-visible .art { filter: drop-shadow(0 0 10px var(--accent)); }
+
+      @media (max-width: 680px) {
+        .j-stage { height: 66vw; min-height: 300px; }
+        .j-toc { grid-template-columns: repeat(2, 1fr); }
+        .j-node { border-top: 1px solid var(--line); }
+        .j-node:nth-child(-n+2) { border-top: none; }
+        .j-node:nth-child(odd) { border-left: none; }
+        .j-hint .desk-only { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .j-world, .j-modal, .j-overlay, .j-building .art { transition: none !important; }
+        .j-star { animation: none; }
+        .j-player.walking .p-leg-l,
+        .j-player.walking .p-leg-r,
+        .j-player.walking .p-bob { animation: none !important; }
+      }
+    </style>
+
+    <section class="j-page container" aria-label="交互式旅程">
+      <a class="j-skip" href="#j-readings">跳到阅读列表</a>
+
+      <div class="j-kicker" th:text="${theme.config.journey != null && theme.config.journey.kicker != null ? theme.config.journey.kicker : 'NO.01 — INTERACTIVE JOURNEY / 可探索的旅程'}">NO.01 — INTERACTIVE JOURNEY / 可探索的旅程</div>
+      <h1 class="j-title" id="jTitle">每一步，都通向新的自己。</h1>
+      <p class="j-sub" id="jSub">从城市出发，在校园继续。</p>
+
+      <!-- 舞台 -->
+      <div class="j-stage" id="jStage" aria-label="像素城市街道场景，使用左右方向键行走">
+        <div class="j-stage-inner">
+          <div class="j-sky" id="jSky"></div>
+          <div class="j-orb" aria-hidden="true"></div>
+          <div class="j-skyline" id="jSkyline" aria-hidden="true"></div>
+          <div class="j-world" id="jWorld"></div>
+          <div class="j-player" id="jPlayer" aria-hidden="true">
+            <div class="p-shadow"></div>
+            <div class="p-flip">
+              <div class="p-leg p-leg-l"></div>
+              <div class="p-leg p-leg-r"></div>
+              <div class="p-bob">
+                <div class="p-bag"></div>
+                <div class="p-body"></div>
+                <div class="p-face"></div>
+                <div class="p-eye"></div>
+                <div class="p-hair"></div>
+                <div class="p-cap"></div>
+                <div class="p-cap-top"></div>
+                <div class="p-cap-brim"></div>
+              </div>
+            </div>
+          </div>
+          <div class="j-street" aria-hidden="true"></div>
+        </div>
+        <div class="j-stage-copy">
+          <span id="jMarker"></span>
+          <span id="jProgress"></span>
+        </div>
+        <div class="j-empty" id="jEmpty" hidden>
+          <div class="e-mark">[ · ]</div>
+          <div class="e-text">这里还没有旅程站点。<br />请到后台「旅程主页」插件中添加你的第一站。</div>
+        </div>
+      </div>
+
+      <!-- 位置栏 -->
+      <div class="j-locbar">
+        <div class="j-loc-left">
+          <span class="j-loc-name" id="jLocName">—</span>
+          <span class="j-loc-period" id="jLocPeriod"></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+          <span class="j-hint desk-only"><kbd>←</kbd><kbd>→</kbd> 行走 · <kbd>1</kbd>-<kbd>6</kbd> 直达 · <kbd>Enter</kbd> 进入 · <kbd>H</kbd> 帮助</span>
+          <button class="btn btn-solid" id="jEnterBtn" type="button">进入这里 <span style="opacity:.65">↵</span></button>
+        </div>
+      </div>
+
+      <!-- 时间轴目录 -->
+      <div class="j-toc-head">
+        <span class="j-progress">探索进度 <b id="jVisitCount">0</b> / <span id="jTotalCount">0</span></span>
+        <button class="btn btn-ghost" id="jHelpBtn2" type="button" style="padding: 8px 18px;">键盘操作 ?</button>
+      </div>
+      <nav class="j-toc" id="jToc" aria-label="旅程章节"></nav>
+
+      <!-- 结语 -->
+      <div class="j-after">
+        <div class="aw-kicker" id="jAwTitle">THE JOURNEY CONTINUES</div>
+        <div class="aw-text" id="jAwText"></div>
+        <div class="aw-links">
+          <a class="btn btn-ghost" th:href="${site.url}">返回首页</a>
+          <a class="btn btn-ghost" href="#j-readings">直接阅读</a>
+        </div>
+      </div>
+
+      <!-- 阅读列表 -->
+      <div class="j-readings" id="j-readings" aria-label="直接阅读列表">
+        <h2 id="jReadingsTitle">直接阅读全部内容</h2>
+        <div id="jReadingsList"></div>
+      </div>
+    </section>
+
+    <!-- 章节模态框 -->
+    <div class="j-overlay" id="jChapterOverlay" role="dialog" aria-modal="true" aria-labelledby="jmTitle">
+      <div class="j-modal">
+        <button class="j-modal-close" id="jChapterClose" type="button" aria-label="关闭">×</button>
+        <div class="m-kicker" id="jmChapter"></div>
+        <div class="m-cat" id="jmCat"></div>
+        <h3 class="m-title" id="jmTitle" style="margin: 0 0 14px;"></h3>
+        <p class="m-summary" id="jmSummary" style="margin: 0 0 14px;"></p>
+        <div class="m-content" id="jmContent"></div>
+        <button class="m-next" id="jmNext" type="button">前往下一站 →</button>
+      </div>
+    </div>
+
+    <!-- 帮助模态框 -->
+    <div class="j-overlay" id="jHelpOverlay" role="dialog" aria-modal="true" aria-labelledby="jHelpTitle">
+      <div class="j-modal j-help">
+        <button class="j-modal-close" id="jHelpClose" type="button" aria-label="关闭">×</button>
+        <h3 id="jHelpTitle">键盘操作指南</h3>
+        <ul>
+          <li><kbd>← → / A D</kbd><span>按住方向键在街道上行走</span></li>
+          <li><kbd>1 — 9</kbd><span>数字键直达对应站点，小人自动走过去</span></li>
+          <li><kbd>Enter ↵</kbd><span>进入当前建筑，阅读这一站的故事</span></li>
+          <li><kbd>ESC</kbd><span>关闭弹窗</span></li>
+          <li><kbd>H / ?</kbd><span>打开本帮助</span></li>
+          <li><kbd>Tab</kbd><span>在建筑、目录与按钮间切换焦点</span></li>
+        </ul>
+        <button class="m-next" id="jHelpOk" type="button">开始探索</button>
+      </div>
+    </div>
+
+    <script th:inline="none">
+      (function () {
+        "use strict";
+        var API_BASE = "/journey-api";
+        var STORAGE_KEY = "journey-home-visited";
+        var state = { stations: [], config: {}, visited: {} };
+        var SLOT_W = 560;
+        var player = { pos: 0, target: null, arrived: null, speed: 420, facing: 1 };
+        var keys = { left: false, right: false };
+        var els = {};
+        var lastTs = 0;
+        var lastActive = -1;
+        var fallbackTimer = null;
+        var lastFocused = null;
+
+        /* ---------- 工具 ---------- */
+        function $(id) { return document.getElementById(id); }
+        function pad(n) { n = n || 0; return (n < 10 ? "0" : "") + n; }
+        function esc(s) {
+          if (s == null) return "";
+          return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        /* ---------- 版画建筑库（SVG 线稿，fill/stroke 走主题变量 class） ---------- */
+        function R(x, y, w, h, cls, extra) {
+          return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h +
+            '" class="' + cls + '" stroke-width="2"' + (extra || "") + "/>";
+        }
+        var buildings = {
+          /* 01 起点小屋：坡顶 + 烟囱 + 田字窗 */
+          cottage: function () {
+            var s = "";
+            s += R(148, 92, 18, 36, "bl");                 // 烟囱
+            s += R(152, 100, 10, 6, "bd", ' stroke="none"');
+            s += R(40, 130, 140, 14, "bl");                 // 坡顶三段
+            s += R(26, 144, 168, 12, "bl");
+            s += R(18, 156, 184, 10, "bl");
+            s += R(44, 166, 132, 114, "bf");                // 主体
+            s += R(88, 238, 44, 42, "bl");                  // 门
+            s += R(94, 244, 32, 30, "bd", ' stroke="none"'); // 门内墨块(镂空感)
+            s += '<circle cx="126" cy="256" r="2.5" class="ba"/>';  // 门把手
+            s += R(56, 186, 26, 26, "bw");                  // 田字窗 ×2
+            s += '<path d="M69 186 v26 M56 199 h26" class="bh" stroke-width="1.5"/>';
+            s += R(138, 186, 26, 26, "bw");
+            s += '<path d="M151 186 v26 M138 199 h26" class="bh" stroke-width="1.5"/>';
+            s += R(196, 260, 16, 12, "bl");                 // 信箱
+            s += R(80, 280, 60, 6, "bl");                   // 台阶
+            s += R(72, 286, 76, 6, "bl");
+            return s;
+          },
+          /* 02 移动工坊：店面 + 雨棚 + 橱窗 */
+          workshop: function () {
+            var s = "";
+            s += R(20, 128, 180, 12, "bl");                 // 檐口
+            s += R(26, 140, 168, 142, "bf");                // 主体
+            for (var i = 0; i < 9; i++) {                    // 雨棚条纹
+              s += R(30 + i * 18, 150, 18, 16, i % 2 === 0 ? "bl" : "bh", ' stroke-width="1.5"');
+            }
+            s += R(64, 174, 92, 22, "bl");                  // 招牌框
+            s += R(72, 182, 8, 7, "ba", ' stroke="none"');
+            s += R(86, 182, 8, 7, "ba", ' stroke="none"');
+            s += R(100, 182, 8, 7, "ba", ' stroke="none"');
+            s += R(114, 182, 8, 7, "ba", ' stroke="none"');
+            s += R(128, 182, 8, 7, "ba", ' stroke="none"');
+            s += R(38, 206, 88, 58, "bw");                  // 橱窗
+            s += '<path d="M82 206 v58 M38 235 h88" class="bh" stroke-width="1.5"/>';
+            s += R(134, 206, 26, 26, "bw");                 // 侧窗
+            s += R(164, 206, 26, 26, "bw");
+            s += R(134, 244, 40, 38, "bl");                 // 门
+            s += R(140, 250, 28, 26, "bd", ' stroke="none"');
+            s += R(26, 282, 168, 8, "bl");                  // 地基
+            return s;
+          },
+          /* 03 开发街区：联排楼 + 阳台线 */
+          district: function () {
+            var s = "";
+            s += R(24, 194, 54, 96, "bf");                  // 左附楼
+            s += R(32, 208, 16, 16, "bw");
+            s += R(54, 208, 16, 16, "bw");
+            s += R(32, 234, 16, 16, "bw");
+            s += R(54, 234, 16, 16, "bw");
+            s += R(70, 138, 132, 152, "bf");                // 主楼
+            s += R(70, 138, 132, 10, "bl");
+            for (var c = 0; c < 4; c++) s += R(82 + c * 30, 156, 20, 20, "bw"); // 二层窗阵
+            s += R(70, 194, 132, 6, "bl", ' stroke-width="1.5"'); // 楼层线
+            s += R(84, 210, 40, 30, "bw");                  // 一层大窗
+            s += R(136, 210, 40, 30, "bw");
+            s += R(184, 240, 26, 50, "bl");                 // 门
+            s += R(189, 246, 16, 38, "bd", ' stroke="none"');
+            s += R(28, 266, 28, 14, "bl");                  // 花坛
+            s += '<path d="M42 266 v-14" class="bh" stroke-width="2"/>'; // 枝
+            s += R(180, 286, 34, 6, "bl");
+            return s;
+          },
+          /* 04 技术高楼：天线 + 电梯井 + 网格窗 */
+          tower: function () {
+            var s = "";
+            s += '<path d="M130 34 v30" class="bh" stroke-width="2"/>';  // 天线
+            s += '<circle cx="130" cy="30" r="4" class="ba"/>';
+            s += R(112, 64, 36, 12, "bl");                  // 顶檐
+            s += R(62, 76, 96, 214, "bf");                  // 主楼
+            s += R(104, 76, 12, 214, "bd", ' stroke="none"'); // 电梯井墨条
+            for (var f = 0; f < 7; f++) {
+              var y = 92 + f * 27;
+              s += R(74, y, 20, 16, "bw");
+              s += R(126, y, 20, 16, "bw");
+            }
+            s += R(78, 258, 64, 32, "bw");                  // 门厅玻璃
+            s += '<path d="M110 258 v32" class="bh" stroke-width="1.5"/>';
+            s += R(72, 290, 76, 6, "bl");
+            s += R(158, 208, 42, 84, "bf");                 // 侧楼
+            s += R(166, 220, 10, 12, "bw");
+            s += R(182, 220, 10, 12, "bw");
+            s += R(166, 242, 10, 12, "bw");
+            s += R(182, 242, 10, 12, "bw");
+            return s;
+          },
+          /* 05 产品实验室：圆顶 + 玻璃幕墙 */
+          lab: function () {
+            var s = "";
+            s += '<path d="M84 118 a32 32 0 0 1 64 0 z" class="bf"/>';  // 圆顶
+            s += '<path d="M115 86 v20" class="bh" stroke-width="2"/>';
+            s += '<circle cx="115" cy="82" r="4" class="ba"/>';
+            s += R(58, 118, 116, 140, "bf");                // 主体
+            s += R(58, 118, 116, 8, "bl");
+            s += R(70, 136, 92, 72, "bw");                  // 幕墙
+            for (var r = 0; r < 3; r++)
+              for (var c = 0; c < 4; c++)
+                s += R(76 + c * 21, 142 + r * 21, 15, 15, r === 1 || c === 1 ? "bl" : "bh", ' stroke-width="1.5"');
+            s += R(86, 216, 60, 14, "bl");                  // 铭牌
+            s += R(94, 221, 8, 4, "ba", ' stroke="none"');
+            s += R(108, 221, 8, 4, "ba", ' stroke="none"');
+            s += R(122, 221, 8, 4, "ba", ' stroke="none"');
+            s += R(92, 236, 48, 22, "bw");                  // 玻璃门
+            s += R(84, 258, 64, 6, "bl");
+            s += R(78, 264, 76, 6, "bl");
+            return s;
+          },
+          /* 06 校园：钟楼 + 山墙 + 拱门 */
+          campus: function () {
+            var s = "";
+            s += '<path d="M30 108 v172" class="bh" stroke-width="2"/>'; // 旗杆
+            s += R(34, 110, 34, 20, "ba");                  // 旗
+            s += R(96, 94, 44, 28, "bf");                   // 钟楼
+            s += R(102, 100, 32, 18, "bw");                 // 钟面
+            s += '<path d="M117 103 v7 h6" class="bh" stroke-width="2"/>'; // 指针
+            s += R(92, 122, 52, 10, "bl");
+            s += R(58, 132, 120, 128, "bf");                // 教学楼
+            s += '<path d="M58 132 L118 106 L178 132 Z" class="bl"/>';   // 山墙
+            for (var c = 0; c < 4; c++) s += R(72 + c * 26, 148, 18, 18, "bw");
+            s += R(58, 186, 120, 6, "bl", ' stroke-width="1.5"');
+            for (c = 0; c < 4; c++) s += R(72 + c * 26, 202, 18, 18, "bw");
+            s += '<path d="M104 260 v-24 a14 14 0 0 1 28 0 v24 z" class="bl"/>'; // 拱门
+            s += R(110, 244, 16, 16, "bd", ' stroke="none"');
+            s += R(94, 260, 48, 6, "bl");
+            s += R(88, 266, 60, 6, "bl");
+            return s;
+          }
+        };
+
+        /* ---------- 天空装饰 ---------- */
+        function renderSky() {
+          var sky = els.sky;
+          var frag = "";
+          for (var i = 0; i < 40; i++) {
+            var x = (i * 137.5 + 31) % 100;
+            var y = (i * 61.8 + 13) % 40;
+            frag += '<span class="j-star" style="left:' + x.toFixed(1) + "%;top:" + y.toFixed(1) +
+              "%;animation-delay:" + (i % 5) + 's"></span>';
+          }
+          /* 墨点飞鸟（浅色为鸟，深色为星，同一元素不同观感由变量驱动） */
+          var birds = [[14, 18], [19, 24], [63, 12], [69, 17], [76, 22]];
+          for (var b = 0; b < birds.length; b++) {
+            frag += '<span class="j-bird" style="left:' + birds[b][0] + "%;top:" + birds[b][1] + '%"></span>';
+          }
+          sky.innerHTML = frag;
+        }
+
+        /* ---------- 渲染 ---------- */
+        function renderWorld() {
+          var html = "";
+          state.stations.forEach(function (st, i) {
+            var drawer = buildings[st.buildingType] || buildings.cottage;
+            html +=
+              '<button class="j-building" data-idx="' + i + '" type="button" aria-label="' +
+              esc(st.displayName) + (st.period ? "，" + esc(st.period) : "") + '，按 Enter 进入">' +
+              '<span class="tag">' + esc(st.displayName) +
+              (st.period ? '<span class="t-period">' + esc(st.period) + "</span>" : "") +
+              "</span>" +
+              '<svg class="art" width="258" height="300" viewBox="0 0 220 300" aria-hidden="true">' +
+              drawer() +
+              "</svg></button>";
+          });
+          els.world.innerHTML = html;
+          els.world.style.width = state.stations.length * SLOT_W + "px";
+          Array.prototype.forEach.call(els.world.querySelectorAll(".j-building"), function (btn) {
+            btn.addEventListener("click", function () {
+              var idx = parseInt(btn.getAttribute("data-idx"), 10);
+              if (activeIdx() === idx) openChapter();
+              else walkTo(idx);
+            });
+          });
+        }
+
+        function renderToc() {
+          var html = "";
+          state.stations.forEach(function (st, i) {
+            html +=
+              '<button class="j-node" data-idx="' + i + '" type="button">' +
+              '<span class="n-no">' + pad(st.chapterNo) + "</span>" +
+              '<span class="n-name">' + esc(st.displayName) + "</span>" +
+              '<span class="n-period">' + esc(st.period || "") + "</span>" +
+              "</button>";
+          });
+          els.toc.innerHTML = html;
+          Array.prototype.forEach.call(els.toc.querySelectorAll(".j-node"), function (btn) {
+            btn.addEventListener("click", function () {
+              walkTo(parseInt(btn.getAttribute("data-idx"), 10));
+            });
+          });
+        }
+
+        function renderReadings() {
+          var html = "";
+          state.stations.forEach(function (st) {
+            html +=
+              "<details><summary><span class=\"r-no\">" + pad(st.chapterNo) + "</span>" +
+              '<span class="r-name">' + esc(st.displayName) + "</span>" +
+              '<span class="r-period">' + esc(st.period || "") + "</span></summary>" +
+              '<div class="r-body">' +
+              (st.content ? esc(st.content) : st.summary ? esc(st.summary) : "内容待补充。") +
+              "</div></details>";
+          });
+          $("jReadingsList").innerHTML = html;
+        }
+
+        function renderChrome() {
+          var c = state.config || {};
+          document.title = (c.siteName || "Journey") + " · 旅程";
+          if (c.heroTitle) $("jTitle").textContent = c.heroTitle;
+          if (c.heroSubtitle) $("jSub").textContent = c.heroSubtitle;
+          if (c.afterwordTitle) $("jAwTitle").textContent = c.afterwordTitle;
+          if (c.afterwordText) $("jAwText").textContent = c.afterwordText;
+          if (c.readingsTitle) $("jReadingsTitle").textContent = c.readingsTitle;
+          $("jTotalCount").textContent = state.stations.length;
+        }
+
+        /* ---------- 游戏状态机 ---------- */
+        function buildingCenter(i) { return i * SLOT_W + SLOT_W / 2; }
+
+        function activeIdx() {
+          var best = 0, bd = Infinity;
+          for (var i = 0; i < state.stations.length; i++) {
+            var d = Math.abs(player.pos - buildingCenter(i));
+            if (d < bd) { bd = d; best = i; }
+          }
+          return best;
+        }
+
+        function clampPos(p) {
+          var lo = 80, hi = state.stations.length * SLOT_W - 80;
+          return Math.max(lo, Math.min(hi, p));
+        }
+
+        function walkTo(i, openOnArrive) {
+          if (!state.stations.length) return;
+          i = Math.max(0, Math.min(state.stations.length - 1, i));
+          player.target = buildingCenter(i);
+          player.arrived = openOnArrive ? openChapter : null;
+          if (document.hidden) startFallback();
+        }
+
+        function sceneBase() {
+          var stageW = els.stage.clientWidth;
+          var worldW = state.stations.length * SLOT_W;
+          return Math.max(0, (stageW - worldW) / 2);
+        }
+        function cameraOffset() {
+          var stageW = els.stage.clientWidth;
+          var worldW = state.stations.length * SLOT_W;
+          return Math.max(0, Math.min(worldW - stageW, player.pos - stageW / 2));
+        }
+        function updateCamera() {
+          var cam = cameraOffset();
+          els.world.style.transform = "translateX(" + (sceneBase() - cam) + "px)";
+          els.skyline.style.transform = "translateX(" + -cam * 0.25 + "px)";
+        }
+        function updatePlayer(moving) {
+          var el = els.player;
+          el.classList.toggle("walking", moving);
+          el.classList.toggle("face-left", player.facing < 0);
+          el.style.transform =
+            "translateX(" + (sceneBase() - cameraOffset() + player.pos - 30) + "px)";
+        }
+
+        function updateActive(force) {
+          var idx = activeIdx();
+          if (!force && idx === lastActive) return;
+          lastActive = idx;
+          var st = state.stations[idx];
+          if (!st) return;
+          var n = state.stations.length;
+
+          Array.prototype.forEach.call(
+            document.querySelectorAll(".j-building"),
+            function (b, i) { b.classList.toggle("current", i === idx); }
+          );
+          Array.prototype.forEach.call(
+            document.querySelectorAll(".j-node"),
+            function (b, i) {
+              b.classList.toggle("current", i === idx);
+              b.classList.toggle("visited", !!state.visited[state.stations[i].name]);
+            }
+          );
+
+          $("jMarker").innerHTML = "<b>" + pad(st.chapterNo) + "</b> — THE JOURNEY";
+          $("jProgress").innerHTML = "<b>" + pad(idx + 1) + "</b> / " + pad(n);
+          $("jLocName").textContent = st.displayName || "—";
+          $("jLocPeriod").textContent = st.period || "";
+          var visitedCount = 0;
+          state.stations.forEach(function (s) { if (state.visited[s.name]) visitedCount++; });
+          $("jVisitCount").textContent = visitedCount;
+        }
+
+        function step(ts) {
+          var dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0;
+          lastTs = ts;
+          var moving = false;
+          if (player.target != null) {
+            var d = player.target - player.pos;
+            var stepPx = player.speed * dt;
+            if (Math.abs(d) <= stepPx + 1) {
+              player.pos = player.target;
+              player.target = null;
+              if (fallbackTimer) { clearInterval(fallbackTimer); fallbackTimer = null; }
+              var cb = player.arrived;
+              player.arrived = null;
+              if (cb) setTimeout(cb, 150);
+            } else {
+              player.facing = d > 0 ? 1 : -1;
+              player.pos += (d > 0 ? 1 : -1) * stepPx;
+              moving = true;
+            }
+          } else if (keys.left !== keys.right) {
+            var dir = keys.right ? 1 : -1;
+            player.facing = dir;
+            player.pos += dir * player.speed * dt;
+            moving = true;
+          }
+          player.pos = clampPos(player.pos);
+          updatePlayer(moving);
+          updateCamera();
+          updateActive();
+        }
+
+        function tick(ts) {
+          step(ts);
+          requestAnimationFrame(tick);
+        }
+
+        /* 后台标签页兜底：rAF 冻结 + interval 节流到 1Hz，按每次推进 1 秒标称速度补偿 */
+        function startFallback() {
+          if (fallbackTimer) return;
+          fallbackTimer = setInterval(function () {
+            if (player.target == null) {
+              clearInterval(fallbackTimer);
+              fallbackTimer = null;
+              return;
+            }
+            var d = player.target - player.pos;
+            var chunk = Math.min(Math.abs(d), player.speed);
+            player.pos += (d > 0 ? 1 : -1) * chunk;
+            step(performance.now());
+          }, 1000);
+        }
+        document.addEventListener("visibilitychange", function () {
+          if (document.hidden) {
+            if (player.target != null) startFallback();
+          } else if (fallbackTimer) {
+            clearInterval(fallbackTimer);
+            fallbackTimer = null;
+          }
+        });
+
+        /* ---------- 模态框（含焦点陷阱） ---------- */
+        function focusables(el) {
+          return Array.prototype.filter.call(
+            el.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"),
+            function (n) { return n.offsetParent !== null; }
+          );
+        }
+        function openModal(id) {
+          keys.left = keys.right = false;
+          lastFocused = document.activeElement;
+          var el = $(id);
+          el.classList.add("open");
+          var f = focusables(el);
+          if (f.length) f[0].focus();
+        }
+        function closeModal(id) {
+          $(id).classList.remove("open");
+          if (lastFocused && lastFocused.focus) lastFocused.focus();
+          lastFocused = null;
+        }
+        function openChapter() {
+          var idx = activeIdx();
+          var st = state.stations[idx];
+          if (!st) return;
+          $("jmChapter").innerHTML = "<b>" + pad(st.chapterNo) + "</b> / " + esc(st.displayName);
+          $("jmCat").textContent = st.period || "旅程";
+          $("jmTitle").textContent = st.displayName;
+          $("jmSummary").textContent = st.summary || "";
+          $("jmContent").textContent = st.content || "内容待补充。";
+          var isLast = idx === state.stations.length - 1;
+          $("jmNext").textContent = isLast ? "完成旅程 ✓" : "前往下一站 →";
+          openModal("jChapterOverlay");
+          if (!state.visited[st.name]) {
+            state.visited[st.name] = true;
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.visited)); } catch (e) {}
+            updateActive(true);
+          }
+        }
+
+        /* ---------- 事件绑定 ---------- */
+        $("jEnterBtn").addEventListener("click", openChapter);
+        $("jChapterClose").addEventListener("click", function () { closeModal("jChapterOverlay"); });
+        $("jmNext").addEventListener("click", function () {
+          var idx = activeIdx();
+          var isLast = idx === state.stations.length - 1;
+          closeModal("jChapterOverlay");
+          if (!isLast) walkTo(idx + 1, true);
+        });
+        $("jHelpBtn2").addEventListener("click", function () { openModal("jHelpOverlay"); });
+        $("jHelpClose").addEventListener("click", function () { closeModal("jHelpOverlay"); });
+        $("jHelpOk").addEventListener("click", function () { closeModal("jHelpOverlay"); });
+
+        $("jChapterOverlay").addEventListener("click", function (e) {
+          if (e.target === this) closeModal("jChapterOverlay");
+        });
+        $("jHelpOverlay").addEventListener("click", function (e) {
+          if (e.target === this) closeModal("jHelpOverlay");
+        });
+
+        /* 完全键盘控制 */
+        document.addEventListener("keydown", function (e) {
+          var modalOpen = document.querySelector(".j-overlay.open");
+          var tag = (e.target.tagName || "").toLowerCase();
+          var typing = tag === "input" || tag === "textarea" || tag === "select";
+
+          /* 模态框内：Tab 焦点陷阱 + Enter 确认 */
+          if (modalOpen) {
+            if (e.key === "Escape") { closeModal(modalOpen.id); return; }
+            if (e.key === "Tab") {
+              var f = focusables(modalOpen);
+              if (!f.length) return;
+              var first = f[0], last = f[f.length - 1];
+              if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault(); last.focus();
+              } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault(); first.focus();
+              }
+            }
+            return;
+          }
+
+          if (typing) return;
+          switch (e.key) {
+            case "ArrowLeft": case "a": case "A":
+              keys.left = true; e.preventDefault(); break;
+            case "ArrowRight": case "d": case "D":
+              keys.right = true; e.preventDefault(); break;
+            case "Enter":
+              openChapter(); break;
+            case "h": case "H": case "?":
+              openModal("jHelpOverlay"); break;
+            default:
+              /* 数字键 1-9 直达站点 */
+              if (e.key >= "1" && e.key <= "9") {
+                var n = parseInt(e.key, 10) - 1;
+                if (n < state.stations.length) walkTo(n);
+              }
+          }
+        });
+        document.addEventListener("keyup", function (e) {
+          if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = false;
+          if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = false;
+        });
+        window.addEventListener("blur", function () { keys.left = keys.right = false; });
+
+        /* 触屏：滑向相邻站点 */
+        var touchX = null;
+        $("jStage").addEventListener("touchstart", function (e) {
+          touchX = e.touches[0].clientX;
+        }, { passive: true });
+        $("jStage").addEventListener("touchend", function (e) {
+          if (touchX === null) return;
+          var dx = e.changedTouches[0].clientX - touchX;
+          if (Math.abs(dx) > 46) walkTo(activeIdx() + (dx < 0 ? 1 : -1));
+          touchX = null;
+        }, { passive: true });
+
+        window.addEventListener("resize", function () {
+          updatePlayer(false);
+          updateCamera();
+        });
+
+        /* ---------- 启动 ---------- */
+        function init() {
+          els.stage = $("jStage");
+          els.sky = $("jSky");
+          els.skyline = $("jSkyline");
+          els.world = $("jWorld");
+          els.player = $("jPlayer");
+          els.toc = $("jToc");
+          renderSky();
+          try {
+            var saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) state.visited = JSON.parse(saved) || {};
+          } catch (e) { state.visited = {}; }
+
+          Promise.all([
+            fetch(API_BASE + "/stations").then(function (r) { return r.json(); }),
+            fetch(API_BASE + "/config").then(function (r) { return r.json(); }).catch(function () { return null; })
+          ]).then(function (results) {
+            var stations = results[0];
+            state.stations = Array.isArray(stations) ? stations : [];
+            state.config = results[1] || {};
+            renderChrome();
+            if (!state.stations.length) {
+              $("jEmpty").hidden = false;
+              $("jEnterBtn").disabled = true;
+              return;
+            }
+            renderWorld();
+            renderToc();
+            renderReadings();
+            player.pos = buildingCenter(0);
+            updateActive(true);
+            updatePlayer(false);
+            updateCamera();
+            requestAnimationFrame(tick);
+          }).catch(function (err) {
+            console.error("[journey] load failed:", err);
+            $("jEmpty").hidden = false;
+            $("jEmpty").querySelector(".e-text").innerHTML = "数据加载失败，请稍后刷新重试。";
+          });
+        }
+        init();
+      })();
+    </script>
+  </th:block>
+</html>
