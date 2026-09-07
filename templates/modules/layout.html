@@ -76,37 +76,40 @@
     <!-- ==================== 导航 ==================== -->
     <nav class="site-nav" aria-label="页面导航">
       <div class="container nav-inner">
-        <!-- 首页：期刊栏目锚点导航 -->
-        <th:block th:if="${variant == 'home'}">
-          <a class="nav-link" href="#featured" data-target="featured"><span class="n">01</span>封面故事</a>
-          <a class="nav-link" href="#articles" data-target="articles"><span class="n">02</span>文章索引</a>
-          <a class="nav-link" href="#projects" data-target="projects"><span class="n">03</span>精选项目</a>
-          <a class="nav-link" href="#about" data-target="about"><span class="n">04</span>关于</a>
-          <span class="nav-current" id="navCurrent">01 / 封面故事</span>
-        </th:block>
-
-        <!-- 内页：站点导航（优先使用后台「主菜单」） -->
-        <th:block th:if="${variant != 'home'}">
-          <th:block th:with="menu = ${menuFinder.getPrimary()}">
-            <th:block th:if="${menu != null}">
-              <th:block th:each="item : ${menu.menuItems}">
+        <!-- 站点导航：后台「主菜单」（首页与内页统一结构，支持子菜单） -->
+        <th:block th:with="menu = ${menuFinder.getPrimary()}">
+          <th:block th:if="${menu != null}">
+            <div class="nav-item" th:each="item : ${menu.menuItems}">
+              <a
+                class="nav-link"
+                th:classappend="${#strings.contains(item.status.href, active) ? 'is-active' : ''}"
+                th:href="${item.status.href}"
+                th:attr="target=${item.spec.target != null && item.spec.target.value == '_blank'} ? '_blank' : null, rel=${item.spec.target != null && item.spec.target.value == '_blank'} ? 'noopener' : null, aria-haspopup=${item.children != null && !#lists.isEmpty(item.children)} ? 'true' : null, aria-expanded=${item.children != null && !#lists.isEmpty(item.children)} ? 'false' : null"
+              >
+                <span class="n" th:if="${item.metadata.annotations != null && item.metadata.annotations['icon'] != null}" th:text="${item.metadata.annotations['icon']}"></span><span th:text="${item.displayName}"></span><span class="caret" th:if="${item.children != null && !#lists.isEmpty(item.children)}" aria-hidden="true">▾</span>
+              </a>
+              <div class="nav-drop" th:if="${item.children != null && !#lists.isEmpty(item.children)}">
                 <a
-                  class="nav-link"
-                  th:classappend="${#strings.contains(item.status.href, active) ? 'is-active' : ''}"
-                  th:href="${item.status.href}"
+                  class="nav-drop-link"
+                  th:each="child : ${item.children}"
+                  th:classappend="${#strings.contains(child.status.href, active) ? 'is-active' : ''}"
+                  th:href="${child.status.href}"
+                  th:attr="target=${child.spec.target != null && child.spec.target.value == '_blank'} ? '_blank' : null, rel=${child.spec.target != null && child.spec.target.value == '_blank'} ? 'noopener' : null"
                 >
-                  <span class="n" th:if="${item.metadata.annotations != null && item.metadata.annotations['icon'] != null}" th:text="${item.metadata.annotations['icon']}"></span>[[${item.spec.displayName}]]
+                  <span th:text="${child.displayName}"></span>
                 </a>
-              </th:block>
-            </th:block>
-            <th:block th:if="${menu == null}">
-              <a class="nav-link" th:href="${site.url}" th:classappend="${active == 'home' ? 'is-active' : ''}"><span class="n">00</span>首页</a>
-              <a class="nav-link" th:href="@{/archives}" th:classappend="${active == 'archives' ? 'is-active' : ''}"><span class="n">01</span>归档</a>
-              <a class="nav-link" th:href="@{/categories}" th:classappend="${active == 'categories' ? 'is-active' : ''}"><span class="n">02</span>分类</a>
-              <a class="nav-link" th:href="@{/tags}" th:classappend="${active == 'tags' ? 'is-active' : ''}"><span class="n">03</span>标签</a>
-            </th:block>
+              </div>
+            </div>
+          </th:block>
+          <th:block th:if="${menu == null}">
+            <a class="nav-link" th:href="${site.url}" th:classappend="${active == 'home' ? 'is-active' : ''}"><span class="n">00</span>首页</a>
+            <a class="nav-link" th:href="@{/archives}" th:classappend="${active == 'archives' ? 'is-active' : ''}"><span class="n">01</span>归档</a>
+            <a class="nav-link" th:href="@{/categories}" th:classappend="${active == 'categories' ? 'is-active' : ''}"><span class="n">02</span>分类</a>
+            <a class="nav-link" th:href="@{/tags}" th:classappend="${active == 'tags' ? 'is-active' : ''}"><span class="n">03</span>标签</a>
           </th:block>
         </th:block>
+        <!-- 首页：期刊滚动栏目指示 -->
+        <span class="nav-current" id="navCurrent" th:if="${variant == 'home'}">—</span>
       </div>
     </nav>
 

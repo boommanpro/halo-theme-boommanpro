@@ -57,21 +57,17 @@ export function initToday() {
 }
 
 export function initNavSpy() {
-  const navLinks = document.querySelectorAll('.nav-link[data-target]');
   const navCurrent = document.getElementById('navCurrent');
   const sections = document.querySelectorAll('main section[data-navlabel]');
-  if (!navLinks.length || !sections.length) return;
+  if (!navCurrent || !sections.length) return;
 
+  // 仅更新右侧滚动栏目指示；菜单高亮由 initNavActive 按当前路径统一管理
   if ('IntersectionObserver' in window) {
     const spy = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const id = entry.target.id;
-            navLinks.forEach((link) => {
-              link.classList.toggle('is-active', link.dataset.target === id);
-            });
-            if (navCurrent) navCurrent.textContent = entry.target.dataset.navlabel;
+            navCurrent.textContent = entry.target.dataset.navlabel;
           }
         });
       },

@@ -5,6 +5,7 @@ import { initProgress } from './js/progress.js';
 import { initReveal } from './js/reveal.js';
 import { initCounters } from './js/counters.js';
 import { initFilter, initToday, initNavSpy } from './js/home.js';
+import { initNavActive, initNavDrop } from './js/nav.js';
 import { initToc } from './js/toc.js';
 import { initHighlight } from './js/highlight.js';
 
@@ -17,6 +18,8 @@ function boot() {
   initCounters();
   initFilter();
   initToday();
+  initNavActive();
+  initNavDrop();
   initNavSpy();
   initToc();
   initHighlight();
