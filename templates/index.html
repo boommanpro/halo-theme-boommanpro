@@ -9,9 +9,9 @@
 >
   <th:block th:fragment="content">
     <th:block
-      th:with="allPosts = ${postFinder.list(1, 0)},
+      th:with="recentPosts = ${postFinder.list(1, 10)},
                allCategories = ${categoryFinder.listAll()},
-               featuredPost = ${allPosts.items != null && !#lists.isEmpty(allPosts.items) ? allPosts.items[0] : null}"
+               featuredPost = ${recentPosts.items != null && !#lists.isEmpty(recentPosts.items) ? recentPosts.items[0] : null}"
     >
       <!-- ==================== Hero ==================== -->
       <section class="hero" aria-label="开篇">
@@ -131,7 +131,7 @@
 
           <div class="filter-bar" role="group" aria-label="按分类筛选文章" data-reveal>
             <button class="chip is-active" data-filter="all">
-              全部<span class="cnt" th:text="${#lists.size(allPosts.items)}"></span>
+              全部<span class="cnt" th:text="${#lists.size(recentPosts.items)}"></span>
             </button>
             <th:block th:each="cat : ${allCategories}">
               <button class="chip" th:attr="data-filter=${cat.metadata.name}">
@@ -140,13 +140,13 @@
             </th:block>
           </div>
           <p class="filter-count" id="filterCount" data-reveal>
-            显示 <span th:text="${#lists.size(allPosts.items)}"></span> / <span th:text="${#lists.size(allPosts.items)}"></span> 篇 · 按时间倒序
+            显示 <span th:text="${#lists.size(recentPosts.items)}"></span> / <span th:text="${#lists.size(recentPosts.items)}"></span> 篇 · 按时间倒序
           </p>
 
           <div class="article-list" id="articleList">
             <a
               class="article-row"
-              th:each="post, iter : ${allPosts.items}"
+              th:each="post, iter : ${recentPosts.items}"
               th:attr="data-cat=${#strings.listJoin(post.categories.![metadata.name], ' ')}"
               th:href="${post.status.permalink}"
               data-reveal
@@ -154,11 +154,6 @@
               <span class="row-no" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
               <span class="row-main">
                 <span class="row-title" th:text="${post.spec.title}"></span>
-                <span class="row-cats">
-                  <th:block th:each="cat, catIter : ${post.categories}">
-                    <th:block th:if="${catIter.index > 0}"> · </th:block>[[${cat.spec.displayName}]]
-                  </th:block>
-                </span>
               </span>
               <span class="row-date" th:text="${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"></span>
               <span class="row-arrow" aria-hidden="true">→</span>

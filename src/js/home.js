@@ -6,6 +6,22 @@ export function initFilter() {
 
   const countEl = document.getElementById('filterCount');
 
+  // 列表仅渲染最近 N 篇，分类计数需按实际渲染的行数统计，而非全站总数
+  chips.forEach((chip) => {
+    const filter = chip.dataset.filter;
+    const cntEl = chip.querySelector('.cnt');
+    if (!cntEl) return;
+    if (filter === 'all') {
+      cntEl.textContent = rows.length;
+      return;
+    }
+    let n = 0;
+    rows.forEach((row) => {
+      if ((row.dataset.cat || '').split(/\s+/).indexOf(filter) !== -1) n++;
+    });
+    cntEl.textContent = n;
+  });
+
   chips.forEach((chip) => {
     chip.addEventListener('click', () => {
       chips.forEach((c) => c.classList.remove('is-active'));
