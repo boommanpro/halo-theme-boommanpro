@@ -8,8 +8,9 @@
   xmlns:th="https://www.thymeleaf.org"
 >
   <th:block th:fragment="content">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js"></script>
+    <!-- 本地 vendor 依赖（锁定版本，避免 CDN 可用性/供应链风险） -->
+    <script th:src="@{/assets/vendor/marked@12.0.2.min.js}"></script>
+    <script th:src="@{/assets/vendor/highlight@11.9.0.min.js}"></script>
 
     <style>
       /* ---------- 纸墨风 Skill 中心（全部使用主题 CSS 变量，自动适配深浅色） ---------- */
@@ -622,6 +623,16 @@
       function escapeHtmlAttr(str) {
         return escapeHtml(str).replace(/"/g, '&quot;');
       }
+      // 仅放行 http(s) 与相对路径，拦截 javascript: 等危险协议
+      function isSafeUrl(url) {
+        if (!url) return false;
+        try {
+          const u = new URL(url, location.origin);
+          return u.protocol === 'http:' || u.protocol === 'https:';
+        } catch (e) {
+          return false;
+        }
+      }
       function formatNumber(n) {
         if (n == null) return '0';
         const num = Number(n);
@@ -798,13 +809,13 @@
                     </div>
                     <div class="sk-viewer" id="sk-viewer"><div class="sk-viewer-empty" style="padding:20px;">加载中…</div></div>
                   </div>`
-                : `<iframe class="sk-iframe" src="${zipUrl}"></iframe>`}
+                : `<iframe class="sk-iframe" src="${zipUrl}" title="${escapeHtml(skill.displayName || skillName)} 演示"></iframe>`}
             `);
             if (isHub) loadSkillHubTree(skill);
             return;
           }
 
-          if (skill.sourceType === 'external' && skill.externalUrl) {
+          if (skill.sourceType === 'external' && skill.externalUrl && isSafeUrl(skill.externalUrl)) {
             updateContent(`
               ${backBtn}
               <div class="sk-detail-head">

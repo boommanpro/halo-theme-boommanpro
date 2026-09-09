@@ -9,14 +9,27 @@
       <meta property="og:description" th:if="${!#strings.isEmpty(desc)}" th:content="${desc}" />
       <meta property="og:type" content="website" />
     </th:block>
-    <link rel="canonical" th:href="${site.url}" />
+    <!-- canonical / og:url：当前页面完整地址（修复全站指向首页的 SEO 问题） -->
+    <th:block th:with="pagePath = ${#ctx.getExchange().getRequest().getPathWithinApplication()}">
+      <link rel="canonical" th:href="${site.url + (pagePath == '/' ? '' : pagePath)}" />
+      <meta property="og:url" th:content="${site.url + (pagePath == '/' ? '' : pagePath)}" />
+    </th:block>
     <link th:if="${!#strings.isEmpty(site.logo)}" rel="icon" th:href="${site.logo}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- 字体异步加载，避免国内网络环境下阻塞首屏渲染 -->
     <link
       href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&amp;family=Noto+Sans+SC:wght@300;400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&amp;family=Noto+Sans+SC:wght@300;400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <!-- 主题初始化（防闪烁） -->
     <script th:inline="javascript">
       (function () {
