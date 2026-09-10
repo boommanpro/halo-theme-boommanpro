@@ -10,7 +10,6 @@
   <th:block th:fragment="content">
     <th:block
       th:with="recentPosts = ${postFinder.list(1, 10)},
-               allCategories = ${categoryFinder.listAll()},
                featuredPost = ${recentPosts.items != null && !#lists.isEmpty(recentPosts.items) ? recentPosts.items[0] : null}"
     >
       <!-- ==================== Hero ==================== -->
@@ -129,25 +128,10 @@
             <span class="sec-en">INDEX</span>
           </div>
 
-          <div class="filter-bar" role="group" aria-label="按分类筛选文章" data-reveal>
-            <button class="chip is-active" data-filter="all">
-              全部<span class="cnt" th:text="${#lists.size(recentPosts.items)}"></span>
-            </button>
-            <th:block th:each="cat : ${allCategories}">
-              <button class="chip" th:attr="data-filter=${cat.metadata.name}">
-                <span th:text="${cat.spec.displayName}"></span><span class="cnt" th:text="${cat.status.visiblePostCount == null ? 0 : cat.status.visiblePostCount}"></span>
-              </button>
-            </th:block>
-          </div>
-          <p class="filter-count" id="filterCount" data-reveal>
-            显示 <span th:text="${#lists.size(recentPosts.items)}"></span> / <span th:text="${#lists.size(recentPosts.items)}"></span> 篇 · 按时间倒序
-          </p>
-
           <div class="article-list" id="articleList">
             <a
               class="article-row"
               th:each="post, iter : ${recentPosts.items}"
-              th:attr="data-cat=${#strings.listJoin(post.categories.![metadata.name], ' ')}"
               th:href="${post.status.permalink}"
               data-reveal
             >

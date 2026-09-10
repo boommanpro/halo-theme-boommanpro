@@ -425,55 +425,6 @@
 }
 
 // ---------- 文章索引 ----------
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.chip {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  padding: 8px 17px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: all 0.22s ease;
-
-  .cnt {
-    opacity: 0.55;
-    margin-left: 6px;
-    font-size: 10.5px;
-  }
-
-  &:hover {
-    border-color: var(--ink-2);
-    color: var(--ink);
-  }
-
-  &.is-active {
-    background: var(--ink);
-    color: var(--bg);
-    border-color: var(--ink);
-
-    .cnt {
-      opacity: 0.65;
-    }
-  }
-}
-
-.filter-count {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  color: var(--ink-3);
-  margin: 18px 0 14px;
-}
-
 .article-list {
   border-bottom: 1px solid var(--line-strong);
 }
