@@ -47,8 +47,9 @@
 }
 
 // ---------- 报头 ----------
+// 全站统一报头尺寸，避免首页与内页切换时顶部跳动
 .masthead {
-  padding: clamp(30px, 5vw, 58px) 0 clamp(22px, 3.4vw, 36px);
+  padding: clamp(18px, 3vw, 28px) 0 clamp(14px, 2.4vw, 22px);
   border-bottom: 4px double var(--line-strong);
 }
 
@@ -63,7 +64,7 @@
 .wordmark {
   font-family: var(--font-serif);
   font-weight: 900;
-  font-size: clamp(46px, 7vw, 86px);
+  font-size: clamp(30px, 4.4vw, 52px);
   line-height: 0.95;
   letter-spacing: -0.02em;
   text-decoration: none;
@@ -94,15 +95,6 @@
   font-size: 11px;
   letter-spacing: 0.22em;
   color: var(--ink-3);
-}
-
-// 内页精简报头
-.masthead--compact {
-  padding: clamp(18px, 3vw, 28px) 0 clamp(14px, 2.4vw, 22px);
-
-  .wordmark {
-    font-size: clamp(30px, 4.4vw, 52px);
-  }
 }
 
 // ---------- 导航 ----------
