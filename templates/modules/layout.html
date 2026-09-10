@@ -13,7 +13,12 @@
     <!-- ==================== 顶部信息条 ==================== -->
     <div class="utility-bar">
       <div class="container ub-inner">
-        <span id="todayLine">—</span>
+        <span
+          id="todayLine"
+          th:with="now=${#temporals.createNow()}"
+          th:text="${#temporals.format(now, 'yyyy年M月d日') + ' · 星期' + {'日','一','二','三','四','五','六'}[#temporals.dayOfWeek(now) % 7] + ' · 第' + T(java.time.temporal.IsoFields).WEEK_OF_WEEK_BASED_YEAR.getFrom(now) + '周'}"
+          >—</span
+        >
         <div class="ub-links">
           <th:block th:each="s : ${theme.config.global.socials}">
             <a
