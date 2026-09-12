@@ -10,9 +10,14 @@
       <meta property="og:type" content="website" />
     </th:block>
     <!-- canonical / og:url：当前页面完整地址（修复全站指向首页的 SEO 问题） -->
-    <th:block th:with="pagePath = ${#ctx.getExchange().getRequest().getPathWithinApplication()}">
-      <link rel="canonical" th:href="${site.url + (pagePath == '/' ? '' : pagePath)}" />
-      <meta property="og:url" th:content="${site.url + (pagePath == '/' ? '' : pagePath)}" />
+    <!-- 注意：site.url 自带尾斜杠，拼接前需先裁掉，否则会产出 https://boommanpro.cn//post 这样的畸形地址 -->
+    <th:block
+      th:with="pagePath = ${#ctx.getExchange().getRequest().getPathWithinApplication()},
+               baseUrl = ${#strings.endsWith(site.url, '/') ? #strings.substring(site.url, 0, #strings.length(site.url) - 1) : site.url},
+               canonicalPath = ${pagePath == null || #strings.isEmpty(pagePath) || pagePath == '/' ? '/' : pagePath}"
+    >
+      <link rel="canonical" th:href="${baseUrl + canonicalPath}" />
+      <meta property="og:url" th:content="${baseUrl + canonicalPath}" />
     </th:block>
     <link th:if="${!#strings.isEmpty(site.logo)}" rel="icon" th:href="${site.logo}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

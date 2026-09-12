@@ -82,7 +82,10 @@
     <nav class="site-nav" aria-label="页面导航">
       <div class="container nav-inner">
         <!-- 站点导航：后台「主菜单」（首页与内页统一结构，支持子菜单） -->
-        <th:block th:with="menu = ${menuFinder.getPrimary()}">
+        <th:block
+          th:with="menu = ${menuFinder.getPrimary()},
+                   archivePrefix = ${#strings.isEmpty(theme.config.global.archive_prefix) ? '/archives' : theme.config.global.archive_prefix}"
+        >
           <th:block th:if="${menu != null}">
             <div class="nav-item" th:each="item : ${menu.menuItems}">
               <a
@@ -113,8 +116,14 @@
             <a class="nav-link" th:href="@{/tags}" th:classappend="${active == 'tags' ? 'is-active' : ''}"><span class="n">03</span>标签</a>
           </th:block>
         </th:block>
-        <!-- 首页：期刊滚动栏目指示 -->
-        <span class="nav-current" id="navCurrent" th:if="${variant == 'home'}">—</span>
+        <!-- 首页：期刊滚动栏目指示（服务端直接渲染首个栏目名，避免占位符「—」造成的闪烁与突兀） -->
+        <span
+          class="nav-current"
+          id="navCurrent"
+          th:if="${variant == 'home'}"
+          th:text="${navLabel != null ? navLabel : '01 / 封面故事'}"
+          >01 / 封面故事</span
+        >
       </div>
     </nav>
 

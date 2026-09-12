@@ -4,6 +4,7 @@
     description = ${site.subtitle},
     active = 'home',
     variant = 'home',
+    navLabel = '01 / 封面故事',
     content = ~{::content})}"
   xmlns:th="https://www.thymeleaf.org"
 >
@@ -144,7 +145,12 @@
             </a>
           </div>
 
-          <a class="archive-more" th:href="@{/archives}">查看完整归档 → </a>
+          <!-- 归档页路径取自主题配置（站点把归档挂在 /post，写死 /archives 会 404） -->
+          <a
+            class="archive-more"
+            th:href="@{${#strings.isEmpty(theme.config.global.archive_prefix) ? '/archives' : theme.config.global.archive_prefix}}"
+            >查看完整归档 → </a
+          >
         </div>
       </section>
 

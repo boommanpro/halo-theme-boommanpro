@@ -54,6 +54,11 @@ spec:
           label: ICP 备案号
           value: ""
           help: 页脚展示的备案号，留空则不显示
+        - $formkit: text
+          name: archive_prefix
+          label: 归档页路径
+          value: "/post"
+          help: 归档页的路径前缀，需与 Halo「设置 → 文章/归档路由」中的归档前缀保持一致（Halo 默认为 /archives）。站点把归档挂在 /post 时务必填写 /post，否则「查看完整归档」会出现 404
 
     - group: hero
       label: 首页 · 开篇
