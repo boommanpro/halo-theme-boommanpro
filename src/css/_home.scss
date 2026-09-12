@@ -19,6 +19,9 @@
   letter-spacing: 0.3em;
   color: var(--accent-ink);
   margin-bottom: 24px;
+  // 中英混排时禁止在汉字之间断行（否则会出现「个人技术期 / 刊」这类孤字）
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .hero-title {
@@ -793,6 +796,12 @@
 @media (max-width: 720px) {
   .nav-current {
     display: none;
+  }
+
+  // 眉题：收窄字距，避免中英混排在窄屏被挤成多行
+  .kicker {
+    letter-spacing: 0.16em;
+    margin-bottom: 18px;
   }
 
   // Hero：标题降一档，CTA 撑满，终端卡收紧

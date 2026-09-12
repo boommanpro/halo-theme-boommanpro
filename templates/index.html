@@ -38,7 +38,7 @@
               <div class="terminal" role="img" aria-label="终端演示">
                 <div class="terminal-bar">
                   <span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>
-                  <span class="terminal-title">boommanpro@cn — zsh</span>
+                  <span class="terminal-title">boommanpro@journal — zsh</span>
                 </div>
                 <div class="terminal-body">
                   <th:block th:each="line, iterStat : ${theme.config.hero.terminal}">
@@ -62,7 +62,8 @@
           <div class="hero-stats" data-reveal style="--d:.15s">
             <div class="stat" th:each="s : ${theme.config.hero.stats}">
               <div class="stat-no">
-                <span th:attr="data-count=${s.value}" data-pad="2">00</span><span class="unit" th:text="${s.unit}"></span>
+                <!-- 服务端直接渲染真实数字：原实现为占位符 00 + JS 滚动，首屏会有闪跳且爬虫读到 00 -->
+                <span th:text="${#numbers.formatInteger(s.value, 2)}">07</span><span class="unit" th:text="${s.unit}"></span>
               </div>
               <div class="stat-label" th:text="${s.label}"></div>
             </div>

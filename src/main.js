@@ -3,7 +3,6 @@ import './css/main.scss';
 import { initTheme } from './js/theme.js';
 import { initProgress } from './js/progress.js';
 import { initReveal } from './js/reveal.js';
-import { initCounters } from './js/counters.js';
 import { initNavSpy } from './js/home.js';
 import { initNavActive, initNavDrop } from './js/nav.js';
 import { initToc } from './js/toc.js';
@@ -15,7 +14,6 @@ function boot() {
   initTheme();
   initProgress();
   initReveal();
-  initCounters();
   initNavActive();
   initNavDrop();
   initNavSpy();

@@ -66,7 +66,8 @@ spec:
         - $formkit: text
           name: kicker
           label: 眉题
-          value: "PERSONAL JOURNAL OF CODE · 个人技术期刊"
+          value: "PERSONAL JOURNAL OF CODE · 构建笔记"
+          help: 中英混排时中文部分尽量短，避免移动端折行出现孤字
         - $formkit: textarea
           name: title
           label: 大标题（支持 HTML）
@@ -75,11 +76,12 @@ spec:
         - $formkit: textarea
           name: subtitle
           label: 副标题
-          value: "我是王启孟，一名写了 7 年 Java 的后台工程师。这里记录我用 AI Coding 构建的一切——从工作流引擎、Halo 插件，到声音克隆与浏览器脚本。写作即存档，构建即思考。"
+          value: "我是王启孟，一名 Java 后台工程师。这里记录我用 AI Coding 构建的一切——从工作流引擎、Halo 插件，到声音克隆与浏览器脚本。写作即存档，构建即思考。"
+          help: 建议不要在正文中重复统计数字里的信息（如「7 年」），避免与统计区撞车
         - $formkit: text
           name: cta_primary_text
           label: 主按钮文字
-          value: "浏览文章索引"
+          value: "开始阅读 ↓"
         - $formkit: text
           name: cta_primary_url
           label: 主按钮链接
@@ -87,7 +89,7 @@ spec:
         - $formkit: text
           name: cta_secondary_text
           label: 次按钮文字
-          value: "GitHub ↗"
+          value: "62 个开源仓库 ↗"
         - $formkit: text
           name: cta_secondary_url
           label: 次按钮链接
@@ -103,12 +105,12 @@ spec:
             - value: 7
               unit: 年
               label: 后端开发经验
-            - value: 12
+            - value: 194
               unit: 篇
-              label: AI CODING 实践实录
-            - value: 6
-              unit: 个
-              label: 精选开源项目
+              label: 写作存档
+            - value: 260
+              unit: star
+              label: 开源项目获星
           children:
             - $formkit: number
               name: value
@@ -121,6 +123,7 @@ spec:
               name: label
               label: 标签
               required: true
+          help: 建议填写可验证的真实数据（如归档页文章总数、GitHub 仓库与 star 数），并与首页「精选项目」卡片数量口径一致
         - $formkit: repeater
           name: terminal
           label: 终端演示内容
@@ -128,17 +131,15 @@ spec:
             - type: command
               text: "whoami"
             - type: output
-              text: "boommanpro · 王启孟（Java 后台 / 7y）"
+              text: "王启孟 · Java 后台 / AI Coding（7y）"
             - type: command
               text: "cat ~/motto.txt"
             - type: output
               text: "爱生活，爱 Coding ....."
             - type: command
-              text: "git log --oneline | head -3"
+              text: "git -C gaia log --oneline -1"
             - type: output
-              text: "f3a9c21 feat: skillshow — 技能展示插件"
-            - type: output
-              text: "b7e4d08 feat: gaia — Agent 工作流编排"
+              text: "e4d3172 fix(workflow): 修复 HttpNode 重试不生效"
           children:
             - $formkit: select
               name: type
