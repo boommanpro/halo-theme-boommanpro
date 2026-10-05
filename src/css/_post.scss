@@ -68,21 +68,11 @@
   }
 }
 
-// 大屏适配：容器加宽后，正文与 TOC 采用「左正文 / 右目录」的报刊式布局，
-// 避免正文仍锁在 760px、与右侧目录之间出现大片空白
+// 大屏适配：正文列随容器加宽而撑满（不再锁 760px / 860px），
+// 与右侧 TOC 保持固定间隙，避免正文与目录之间出现大片留白
 @media (min-width: 1440px) {
   .post-layout {
-    grid-template-columns: minmax(0, 860px) 240px;
-    justify-content: space-between;
-  }
-
-  .post-layout--single {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .post-content {
-    max-width: 860px;
-    margin-inline: auto;
+    grid-template-columns: minmax(0, 1fr) 240px;
   }
 }
 
@@ -154,7 +144,7 @@
   font-size: 16px;
   line-height: 1.95;
   color: var(--ink);
-  max-width: 760px;
+  min-width: 0;
 
   > * + * {
     margin-top: 1.2em;
