@@ -71,8 +71,9 @@ img {
   font-family: var(--font-mono);
 }
 
+// 大屏自适应：常规屏幕保持 1160px，随视口宽度平滑加宽（2K/4K 下不再两侧留白过大）
 .container {
-  max-width: 1160px;
+  max-width: clamp(1160px, 86vw, 1720px);
   margin-inline: auto;
   padding-inline: clamp(20px, 4vw, 48px);
 }
