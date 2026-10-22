@@ -13,7 +13,7 @@ spec:
   repo: https://github.com/boommanpro/halo-theme-boommanpro.git
   settingName: "halo-theme-boommanpro-setting"
   configMapName: "halo-theme-boommanpro-configMap"
-  version: 1.2.3
+  version: 1.3.0
   require: ">=2.0.0"
   customTemplates:
     page:
@@ -21,5 +21,5 @@ spec:
         description: Skill 技能中心
         file: skill.html
       - name: journey
-        description: Journey 交互式旅程（像素城市探索）
+        description: Journey 交互式旅程（3D 纸墨小街）
         file: journey.html
