@@ -13,122 +13,37 @@
     <style>
       /* ============================================================
          纸墨旅程 3D（Paper & Ink Journey 3D）
-         大舞台版：场景由「旅程主页」插件渲染，建筑数据来自博客文章与分类
+         全屏内嵌版：整个内容区即 3D 小街，背景与主题页面无缝融合
          ============================================================ */
-      .j-page {
-        padding-top: clamp(30px, 4.5vw, 54px);
-      }
-
-      /* ---------- 报头区（期刊式） ---------- */
-      .j-kicker {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.3em;
-        color: var(--accent-ink);
-        margin-bottom: 14px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .j-kicker::after {
-        content: "";
-        flex: 1;
+      .j-street-full {
+        /* 突破主题 container 宽度，占满全屏宽 */
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
         border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        /* 让 100vw 不产生横向滚动（规避滚动条宽度） */
+        box-sizing: border-box;
       }
-      .j-title {
-        font-family: var(--font-serif);
-        font-weight: 900;
-        font-size: clamp(28px, 4.2vw, 54px);
-        line-height: 1.22;
-        margin-bottom: 10px;
-      }
-      .j-sub {
-        font-size: 15px;
-        font-weight: 300;
-        color: var(--ink-2);
-        margin-bottom: 26px;
-      }
-
-      /* ---------- 3D 大舞台（插件渲染） ---------- */
-      .j-street-wrap {
-        margin: 0 -8px;
-      }
-      .j-street-wrap .journey-street {
-        height: min(78vh, 820px);
-        min-height: 460px;
-      }
-
-      /* ---------- 结语 ---------- */
-      .j-after {
-        margin-top: 34px;
-        padding: 26px 0 6px;
-        border-top: 1px solid var(--line-strong);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .j-after .aw-kicker {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.24em;
-        color: var(--ink-3);
-      }
-      .j-after .aw-text {
-        font-size: 14px;
-        color: var(--ink-2);
-        line-height: 1.9;
-        max-width: 620px;
-      }
-      .j-after .aw-links {
-        display: flex;
-        gap: 12px;
-        margin-top: 8px;
-        flex-wrap: wrap;
+      .j-street-full .journey-street {
+        height: min(88svh, 940px);
+        min-height: 480px;
+        display: block;
       }
 
       @media (max-width: 680px) {
-        .j-street-wrap .journey-street {
-          height: 72svh;
-          min-height: 420px;
-        }
-        .j-street-wrap {
-          margin: 0 -4px;
+        .j-street-full .journey-street {
+          height: 82svh;
+          min-height: 440px;
         }
       }
     </style>
 
-    <section class="j-page container" aria-label="交互式旅程">
-      <div
-        class="j-kicker"
-        th:text="${theme.config.journey != null && theme.config.journey.kicker != null ? theme.config.journey.kicker : 'NO.01 — INTERACTIVE JOURNEY / 可探索的旅程'}"
-      >
-        NO.01 — INTERACTIVE JOURNEY / 可探索的旅程
-      </div>
-      <h1 class="j-title" th:text="${singlePage.spec.title}">每一步，都通向新的自己。</h1>
-      <p
-        class="j-sub"
-        th:text="${singlePage.status.excerpt != null && !#strings.isEmpty(singlePage.status.excerpt) ? singlePage.status.excerpt : '走进小街，点开每一栋房子：主建筑是关于我，书屋是分类，其余是最新文章。'}"
-      >
-        走进小街，点开每一栋房子：主建筑是关于我，书屋是分类，其余是最新文章。
-      </p>
-
-      <!-- 3D 大舞台：内容与交互由「旅程主页」插件提供 -->
-      <div class="j-street-wrap">
-        <div id="journey-street" class="journey-street" aria-label="3D 纸墨小街：拖动环顾，点击建筑阅读">
-          <noscript>启用 JavaScript 才能漫步这条 3D 小街。</noscript>
-        </div>
-      </div>
-
-      <!-- 结语 -->
-      <div class="j-after">
-        <div class="aw-kicker" th:text="${theme.config.journey != null && theme.config.journey.afterword != null ? theme.config.journey.afterword : 'THE JOURNEY CONTINUES'}">THE JOURNEY CONTINUES</div>
-        <div class="aw-text">
-          街道由博客内容实时生成：走进书屋读一个分类，推开任意一扇门读一篇文章。
-        </div>
-        <div class="aw-links">
-          <a class="btn btn-ghost" th:href="@{/}">返回首页</a>
-          <a class="btn btn-ghost" th:href="@{/archives}">浏览全部文章</a>
-        </div>
+    <section class="j-street-full" aria-label="交互式旅程">
+      <div id="journey-street" class="journey-street" aria-label="3D 纸墨小街：拖动环顾，点击建筑阅读">
+        <noscript>启用 JavaScript 才能漫步这条 3D 小街。</noscript>
       </div>
     </section>
 
