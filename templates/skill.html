@@ -854,7 +854,9 @@
 
       function skillTypeLabel(s) {
         if (s.sourceType === 'github') return 'GitHub';
-        if (s.sourceType === 'zip') return '演示站';
+        if (s.sourceType === 'zip') {
+          return (s.entryFile && s.entryFile !== 'index.html') ? '技能包' : '演示站';
+        }
         if (s.sourceType === 'external') return '外链';
         if (s.files && s.files.length > 0) return '项目';
         return '文档';
