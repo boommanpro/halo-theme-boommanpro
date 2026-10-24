@@ -32,6 +32,7 @@
                 <span class="row-main">
                   <span class="arc-title" th:text="${post.spec.title}"></span>
                   <span class="arc-cats">
+                    <th:block th:if="${#lists.isEmpty(post.categories)}">—</th:block>
                     <th:block th:each="cat, catIter : ${post.categories}">
                       <th:block th:if="${catIter.index > 0}"> · </th:block>[[${cat.spec.displayName}]]
                     </th:block>

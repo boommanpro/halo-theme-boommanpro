@@ -108,6 +108,10 @@
   font-size: 17px;
   line-height: 1.55;
   transition: transform 0.28s ease;
+  // 固定单行：长标题省略号，保证归档列表所有条目等高
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .arc-cats {
@@ -117,6 +121,11 @@
   letter-spacing: 0.08em;
   color: var(--ink-3);
   margin-top: 5px;
+  // 固定单行高度：无分类的文章由模板渲染「—」占位，行高一致
+  min-height: 1.4em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 720px) {
