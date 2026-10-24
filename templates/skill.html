@@ -933,18 +933,19 @@
         const safeName = encodeURIComponent(window._currentSkillName);
         const cmds = [];
         if (skill.sourceRepo && !skill.sourceSubdir) {
+          // installCommand 由博主在后台维护精确形式（如 owner/repo@skill-name），优先于自动生成
           cmds.push({
             id: 'npx',
             label: 'npx（推荐）',
-            cmd: `npx skills add ${skill.sourceRepo}`,
+            cmd: skill.installCommand || `npx skills add ${skill.sourceRepo}`,
             hint: '需 Node.js 22+；自动识别本机已装的 Claude Code / ZCode / Cursor 等客户端并安装'
           });
         } else if (skill.sourceRepo && skill.sourceSubdir) {
           cmds.push({
             id: 'npx',
             label: 'npx（推荐）',
-            cmd: `npx skills add ${skill.sourceRepo}`,
-            hint: `技能位于仓库子目录 ${skill.sourceSubdir}，若命令未能定位，请用下方命令从本站下载后解压到对应目录`
+            cmd: skill.installCommand || `npx skills add ${skill.sourceRepo}`,
+            hint: 'CLI 会自动扫描仓库发现子目录中的技能；若未能定位，请用下方命令从本站下载'
           });
         }
         cmds.push({
