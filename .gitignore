@@ -2,3 +2,4 @@ node_modules/
 templates/assets/dist/
 *.zip
 .DS_Store
+halo-plugin-journey-home-0.1.3.jar

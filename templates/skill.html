@@ -195,6 +195,17 @@
         color: var(--ink-3);
       }
 
+      .sk-card-counts {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+
+        .sk-card-go {
+          color: var(--ink-3);
+          transition: color 0.2s;
+        }
+      }
+
       .sk-card-go {
         color: var(--ink-3);
         transition: color 0.2s;
@@ -283,6 +294,101 @@
         gap: 10px;
         flex-wrap: wrap;
         margin-top: 18px;
+      }
+
+      .sk-btn.is-small {
+        padding: 5px 12px;
+        font-size: 11px;
+      }
+
+      /* 安装区：命令 Tab + 复制 */
+      .sk-install {
+        border: 1px solid var(--line-strong);
+        background: var(--card);
+        margin-bottom: 34px;
+      }
+
+      .sk-install-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 9px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .sk-install-title {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        color: var(--ink-3);
+      }
+
+      .sk-install-tabs {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+
+      .sk-install-tab {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        letter-spacing: 0.06em;
+        color: var(--ink-3);
+        background: none;
+        border: 1px solid transparent;
+        padding: 3px 10px;
+        cursor: pointer;
+        transition: color 0.2s, border-color 0.2s;
+
+        &:hover {
+          color: var(--ink);
+        }
+
+        &.is-active {
+          color: var(--accent-ink);
+          border-color: var(--line-strong);
+          background: var(--accent-soft);
+        }
+      }
+
+      .sk-install-body {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 14px;
+        background: var(--term-bg);
+
+        code {
+          flex: 1;
+          min-width: 0;
+          font-family: var(--font-mono);
+          font-size: 12.5px;
+          color: var(--term-ink);
+          white-space: pre-wrap;
+          word-break: break-all;
+        }
+
+        .sk-btn {
+          flex-shrink: 0;
+          border-color: rgba(255, 255, 255, 0.3);
+          color: var(--term-ink);
+          background: transparent;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--term-ink);
+          }
+        }
+      }
+
+      .sk-install-hint {
+        font-size: 12px;
+        color: var(--ink-3);
+        padding: 8px 14px 10px;
+        margin: 0;
+        line-height: 1.7;
       }
 
       .sk-btn {
@@ -739,10 +845,15 @@
       }
 
       function skillTypeLabel(s) {
+        if (s.sourceType === 'github') return 'GitHub';
         if (s.sourceType === 'zip') return '演示站';
         if (s.sourceType === 'external') return '外链';
         if (s.files && s.files.length > 0) return '项目';
         return '文档';
+      }
+
+      function isPackageSkill(s) {
+        return s && (s.sourceType === 'zip' || s.sourceType === 'github');
       }
 
       function renderSkillCard(s) {
@@ -758,7 +869,11 @@
             <div class="sk-card-summary">${escapeHtml(s.summary || '暂无描述')}</div>
             <div class="sk-card-foot">
               <span>${escapeHtml(s.author || 'boommanpro')}</span>
-              <span class="sk-card-go">查看 →</span>
+              <span class="sk-card-counts" title="浏览 / 下载">
+                <span>👁 ${formatNumber(s.views)}</span>
+                <span>↓ ${formatNumber(s.downloads)}</span>
+                <span class="sk-card-go">查看 →</span>
+              </span>
             </div>
           </div>`;
       }
@@ -779,28 +894,132 @@
       }
 
       // ---------- 详情 ----------
+      function pingView(name) {
+        // 浏览埋点：失败静默，不影响渲染
+        fetch(API_BASE + '/skills/' + encodeURIComponent(name) + '/view').catch(() => {});
+      }
+
+      function detailStats(skill) {
+        const parts = [];
+        if (skill.views != null) parts.push(`<span>VIEWS · <strong>${formatNumber(skill.views)}</strong></span>`);
+        if (skill.downloads != null) parts.push(`<span>DOWNLOADS · <strong>${formatNumber(skill.downloads)}</strong></span>`);
+        if (skill.author) parts.push(`<span>AUTHOR · <strong>${escapeHtml(skill.author)}</strong></span>`);
+        if (skill.updatedAt) parts.push(`<span>UPDATED · <strong>${escapeHtml(String(skill.updatedAt).slice(0, 10))}</strong></span>`);
+        return parts.length ? `<div class="sk-stats">${parts.join('')}</div>` : '';
+      }
+
+      /**
+       * 安装命令候选：GitHub 来源且在仓库根目录时优先 npx skills 生态命令
+       * （自动适配 Claude Code / ZCode / Cursor 等 75+ 客户端），
+       * 其余场景回退到本站 ZIP 下载端点的平台命令。
+       */
+      function installCommands(skill) {
+        const url = new URL(downloadUrl(), location.origin).toString();
+        const safeName = encodeURIComponent(window._currentSkillName);
+        const cmds = [];
+        if (skill.sourceRepo && !skill.sourceSubdir) {
+          cmds.push({
+            id: 'npx',
+            label: 'npx（推荐）',
+            cmd: `npx skills add ${skill.sourceRepo}`,
+            hint: '需 Node.js 22+；自动识别本机已装的 Claude Code / ZCode / Cursor 等客户端并安装'
+          });
+        } else if (skill.sourceRepo && skill.sourceSubdir) {
+          cmds.push({
+            id: 'npx',
+            label: 'npx（推荐）',
+            cmd: `npx skills add ${skill.sourceRepo}`,
+            hint: `技能位于仓库子目录 ${skill.sourceSubdir}，若命令未能定位，请用下方命令从本站下载后解压到对应目录`
+          });
+        }
+        cmds.push({
+          id: 'bash',
+          label: 'macOS / Linux',
+          cmd: `mkdir -p "$HOME/.claude/skills" && curl -fsSL '${url}' -o "/tmp/${safeName}.zip" && unzip -o "/tmp/${safeName}.zip" -d "$HOME/.claude/skills/${safeName}"`,
+          hint: '解压到 Claude Code 的全局技能目录 ~/.claude/skills（其他客户端请替换为目标目录）'
+        });
+        cmds.push({
+          id: 'pwsh',
+          label: 'Windows',
+          cmd: `$dir = Join-Path $env:USERPROFILE '.claude\\skills\\${safeName}'; New-Item -ItemType Directory -Force -Path $dir | Out-Null; Invoke-WebRequest -Uri '${url}' -OutFile "$env:TEMP\\${safeName}.zip"; Expand-Archive -Path "$env:TEMP\\${safeName}.zip" -DestinationPath $dir -Force`,
+          hint: '解压到 Claude Code 的全局技能目录 %USERPROFILE%\\.claude\\skills（其他客户端请替换为目标目录）'
+        });
+        return cmds;
+      }
+
+      function installAreaHtml(skill) {
+        const cmds = installCommands(skill);
+        window._installCmds = cmds;
+        return `
+          <div class="sk-install">
+            <div class="sk-install-head">
+              <span class="sk-install-title">INSTALL</span>
+              <div class="sk-install-tabs">
+                ${cmds.map((c, i) => `<button type="button" class="sk-install-tab ${i === 0 ? 'is-active' : ''}" data-cmd="${i}">${c.label}</button>`).join('')}
+              </div>
+            </div>
+            <div class="sk-install-body">
+              <code id="sk-install-cmd">${escapeHtml(cmds[0].cmd)}</code>
+              <button class="sk-btn is-small" type="button" id="sk-install-copy">复制</button>
+            </div>
+            <p class="sk-install-hint" id="sk-install-hint">${escapeHtml(cmds[0].hint)}</p>
+          </div>`;
+      }
+
+      function attachInstallEvents() {
+        const box = document.querySelector('.sk-install');
+        if (!box) return;
+        const cmdEl = box.querySelector('#sk-install-cmd');
+        const hintEl = box.querySelector('#sk-install-hint');
+        box.querySelectorAll('.sk-install-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            box.querySelectorAll('.sk-install-tab').forEach(t => t.classList.remove('is-active'));
+            tab.classList.add('is-active');
+            const c = (window._installCmds || [])[parseInt(tab.dataset.cmd)];
+            if (c && cmdEl && hintEl) {
+              cmdEl.textContent = c.cmd;
+              hintEl.textContent = c.hint;
+            }
+          });
+        });
+        box.querySelector('#sk-install-copy').addEventListener('click', () => {
+          if (cmdEl) copyText(cmdEl.textContent);
+        });
+      }
+
       async function renderSkillDetail(skillName) {
         updateContent('<div class="sk-loading"><div class="sk-spinner"></div><p>LOADING…</p></div>');
         try {
           const skill = await fetch(API_BASE + '/skills/' + encodeURIComponent(skillName)).then(r => r.json());
           window._currentSkillName = skillName;
+          pingView(skillName);
 
           const backBtn = `<button class="sk-back" onclick="navigateTo('/', event)">← 返回技能库</button>`;
           const versionBadge = (skill.skillVersion || skill.version) ? `<span class="sk-version">v${escapeHtml(skill.skillVersion || skill.version)}</span>` : '';
 
-          if (skill.sourceType === 'zip') {
+          if (isPackageSkill(skill)) {
             const isHub = skill.entryFile && skill.entryFile !== 'index.html';
             const zipUrl = skill.previewUrl || '/showcase/' + encodeURIComponent(skillName) + '/';
             updateContent(`
               ${backBtn}
               <div class="sk-detail-head">
-                <div class="sk-detail-title-row"><h1 class="sk-detail-title">${escapeHtml(skill.displayName || skillName)}</h1>${versionBadge}</div>
+                <div class="sk-detail-title-row">
+                  <h1 class="sk-detail-title">${escapeHtml(skill.displayName || skillName)}</h1>
+                  ${versionBadge}
+                </div>
+                <div class="sk-badges" style="margin-bottom:12px;">
+                  ${skill.categoryName ? `<span class="sk-badge is-cat">${escapeHtml(skill.categoryName)}</span>` : ''}
+                  ${skill.sourceRepo ? `<span class="sk-badge">GITHUB · ${escapeHtml(skill.sourceRepo)}</span>` : ''}
+                  <span class="sk-badge">${isHub ? '技能包' : '演示站'}</span>
+                </div>
                 <p class="sk-detail-summary">${escapeHtml(skill.summary || (isHub ? '技能包' : 'ZIP 演示站'))}</p>
+                ${detailStats(skill)}
                 <div class="sk-actions">
-                  <button class="sk-btn is-primary" onclick="downloadSkillZip()">下载技能包</button>
-                  <button class="sk-btn" onclick="copyInstallCmd()">复制安装命令</button>
+                  <a class="sk-btn is-primary" href="${downloadUrl()}" download>下载 ZIP</a>
+                  ${skill.sourceRepo ? `<a class="sk-btn" href="https://github.com/${escapeHtml(skill.sourceRepo)}" target="_blank" rel="noopener">GitHub ↗</a>` : ''}
                 </div>
               </div>
+              ${installAreaHtml(skill)}
               ${isHub
                 ? `<div class="sk-hub">
                     <div class="sk-tree">
@@ -811,6 +1030,7 @@
                   </div>`
                 : `<iframe class="sk-iframe" src="${zipUrl}" title="${escapeHtml(skill.displayName || skillName)} 演示"></iframe>`}
             `);
+            attachInstallEvents();
             if (isHub) loadSkillHubTree(skill);
             return;
           }
@@ -845,14 +1065,12 @@
                 <span class="sk-badge">${skill.files && skill.files.length > 0 ? '项目' : '文档'}</span>
               </div>
               <p class="sk-detail-summary">${escapeHtml(skill.summary || '暂无描述')}</p>
-              <div class="sk-stats">
-                ${skill.author ? `<span>AUTHOR · <strong>${escapeHtml(skill.author)}</strong></span>` : ''}
-              </div>
+              ${detailStats(skill)}
               <div class="sk-actions">
-                <button class="sk-btn is-primary" onclick="downloadSkillZip()">下载技能包</button>
-                <button class="sk-btn" onclick="copyInstallCmd()">复制安装命令</button>
+                <a class="sk-btn is-primary" href="${downloadUrl()}" download>下载 ZIP</a>
               </div>
             </div>
+            ${installAreaHtml(skill)}
           `;
 
           const mdContent = skill.content || (skill.files?.find(f => f.language === 'markdown')?.content) || '';
@@ -883,6 +1101,7 @@
           }
 
           updateContent(html);
+          attachInstallEvents();
 
           if (window.hljs && mdContent) document.querySelectorAll('.sk-md pre code').forEach(b => hljs.highlightElement(b));
 
@@ -912,30 +1131,6 @@
 
       function downloadUrl() {
         return API_BASE + '/skills/' + encodeURIComponent(window._currentSkillName) + '/download';
-      }
-
-      function downloadSkillZip() {
-        const a = document.createElement('a');
-        a.href = downloadUrl();
-        a.download = '';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-
-      function buildInstallCmd() {
-        const url = new URL(downloadUrl(), location.origin).toString();
-        const safeName = encodeURIComponent(window._currentSkillName);
-        const win = /win/i.test(navigator.platform) || /windows/i.test(navigator.userAgent);
-        const mac = /mac|iphone|ipad/i.test(navigator.platform);
-        if (win) {
-          return `$dir = Join-Path $env:USERPROFILE '.halo\\skills'; New-Item -ItemType Directory -Force -Path $dir | Out-Null; Invoke-WebRequest -Uri '${url}' -OutFile (Join-Path $dir '${safeName}.zip'); Expand-Archive -Path (Join-Path $dir '${safeName}.zip') -DestinationPath (Join-Path $dir '${safeName}') -Force`;
-        }
-        return `mkdir -p "$HOME/.halo/skills" && curl -fsSL '${url}' -o "$HOME/.halo/skills/${safeName}.zip" && unzip -o "$HOME/.halo/skills/${safeName}.zip" -d "$HOME/.halo/skills/${safeName}"`;
-      }
-
-      function copyInstallCmd() {
-        copyText(buildInstallCmd());
       }
 
       // ---------- ZIP 技能文件树 ----------
@@ -1070,8 +1265,6 @@
       }
 
       window.navigateTo = navigateTo;
-      window.downloadSkillZip = downloadSkillZip;
-      window.copyInstallCmd = copyInstallCmd;
 
       document.addEventListener('DOMContentLoaded', init);
     </script>
