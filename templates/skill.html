@@ -206,6 +206,14 @@
         }
       }
 
+      .sk-ico {
+        width: 12px;
+        height: 12px;
+        vertical-align: -1.5px;
+        margin-right: 3px;
+        opacity: 0.75;
+      }
+
       .sk-card-go {
         color: var(--ink-3);
         transition: color 0.2s;
@@ -856,6 +864,11 @@
         return s && (s.sourceType === 'zip' || s.sourceType === 'github');
       }
 
+      const SK_ICONS = {
+        eye: '<svg class="sk-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+        download: '<svg class="sk-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
+      };
+
       function renderSkillCard(s) {
         const version = s.skillVersion || s.version || '';
         return `
@@ -870,8 +883,8 @@
             <div class="sk-card-foot">
               <span>${escapeHtml(s.author || 'boommanpro')}</span>
               <span class="sk-card-counts" title="浏览 / 下载">
-                <span>👁 ${formatNumber(s.views)}</span>
-                <span>↓ ${formatNumber(s.downloads)}</span>
+                <span>${SK_ICONS.eye}${formatNumber(s.views)}</span>
+                <span>${SK_ICONS.download}${formatNumber(s.downloads)}</span>
                 <span class="sk-card-go">查看 →</span>
               </span>
             </div>
