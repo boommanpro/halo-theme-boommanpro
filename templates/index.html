@@ -62,8 +62,14 @@
           <div class="hero-stats" data-reveal style="--d:.15s">
             <div class="stat" th:each="s : ${theme.config.hero.stats}">
               <div class="stat-no">
-                <!-- 服务端直接渲染真实数字：原实现为占位符 00 + JS 滚动，首屏会有闪跳且爬虫读到 00 -->
-                <span th:text="${#numbers.formatInteger(s.value, 2)}">07</span><span class="unit" th:text="${s.unit}"></span>
+                <!-- 服务端直接渲染真实数字：原实现为占位符 00 + JS 滚动，首屏会有闪跳且爬虫读到 00。
+                     「写作存档」约定为实时值：文章总数由 postFinder 现算，避免配置数字过期。 -->
+                <span
+                  th:text="${s.label == '写作存档'
+                    ? #numbers.formatInteger(postFinder.list(1, 1).total, 1)
+                    : #numbers.formatInteger(s.value, 2)}"
+                  >07</span
+                ><span class="unit" th:text="${s.unit}"></span>
               </div>
               <div class="stat-label" th:text="${s.label}"></div>
             </div>
@@ -104,9 +110,11 @@
                 <div class="mock-inner">
                   <div class="mock-bar">
                     <span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>
-                    <span class="mock-url" th:text="${theme.config.featured.mock_url}"></span>
+                    <span class="mock-url">boommanpro.cn/skill</span>
                   </div>
-                  <div class="skills-grid">
+                  <!-- 服务端渲染的 skill 卡为静态示意（无 JS 时的降级内容），
+                       页面脚本会用 /showcase-api 的真实技能数据重建并附上详情页链接。 -->
+                  <div class="skills-grid" id="homeSkillsGrid">
                     <div class="skill-chip" th:classappend="${sk.hot == true ? 'is-hot' : ''}" th:each="sk : ${theme.config.featured.mock_skills}">
                       <span class="sk-badge" th:if="${sk.hot == true && !#strings.isEmpty(sk.badge)}" th:text="${sk.badge}"></span>
                       <span class="sk-name" th:text="${sk.name}"></span>
@@ -114,7 +122,7 @@
                     </div>
                   </div>
                 </div>
-                <p class="mock-caption" th:text="${theme.config.featured.mock_caption}"></p>
+                <p class="mock-caption" id="homeSkillsCaption" th:text="${theme.config.featured.mock_caption}"></p>
               </div>
             </div>
           </div>
@@ -225,6 +233,38 @@
           </div>
         </div>
       </section>
+
+      <script>
+        // 首页 skill 卡：用 skill-showcase 插件的真实数据替换静态示意，
+        // 每张卡可点击进入 /skill 详情页；API 不可用时保留服务端渲染的降级内容。
+        (function () {
+          var grid = document.getElementById('homeSkillsGrid');
+          if (!grid || !window.fetch) return;
+          fetch('/showcase-api/skills')
+            .then(function (r) { return r.json(); })
+            .then(function (skills) {
+              if (!Array.isArray(skills) || !skills.length) return;
+              function esc(t) {
+                var d = document.createElement('div');
+                d.textContent = t == null ? '' : String(t);
+                return d.innerHTML;
+              }
+              grid.innerHTML = skills.slice(0, 6).map(function (s) {
+                var desc = (s.summary || '').replace(/\s+/g, ' ').slice(0, 26);
+                return '<a class="skill-chip" href="/skill#/d/' + encodeURIComponent(s.name) + '">' +
+                  (s.categoryName ? '<span class="sk-badge">' + esc(s.categoryName) + '</span>' : '') +
+                  '<span class="sk-name">' + esc(s.displayName || s.name) + '</span>' +
+                  '<span class="sk-desc">' + esc(desc) + '</span>' +
+                  '</a>';
+              }).join('');
+              var cap = document.getElementById('homeSkillsCaption');
+              if (cap) {
+                cap.innerHTML = '<a href="/skill">进入 skill 中心 →</a>';
+              }
+            })
+            .catch(function () { /* 保留降级内容 */ });
+        })();
+      </script>
     </th:block>
   </th:block>
 </html>
